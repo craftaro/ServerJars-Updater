@@ -62,7 +62,7 @@ public final class ServerJars {
     private static Path setupEnv() {
 
         Properties properties = new Properties();
-        Path cache = Paths.get("cache");
+        Path cache = Paths.get("jar");
 
         try {
             InputStream defaultsInput = ServerJars.class.getResourceAsStream("/serverjars.properties");
@@ -196,7 +196,7 @@ public final class ServerJars {
 
     private static Path findExistingJar() {
         try {
-            Path cache = Paths.get("cache");
+            Path cache = Paths.get("jar");
             if (Files.isDirectory(cache)) {
                 List<Path> list = Files.list(cache).filter(f -> f.toString().endsWith(".jar")).collect(Collectors.toList());
                 if (list.isEmpty())
