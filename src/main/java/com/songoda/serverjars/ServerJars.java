@@ -34,7 +34,7 @@ public final class ServerJars {
                 "  \\__ \\/ _ \\/ ___/ | / / _ \\/ ___/_  / / __ `/ ___/ ___/\n" +
                 " ___/ /  __/ /   | |/ /  __/ /  / /_/ / /_/ / /  (__  ) \n" +
                 "/____/\\___/_/    |___/\\___/_/   \\____/\\__,_/_/  /____/  \n" +
-                "                         Made with love by Songoda <3");
+                " ServerJars.com      Made with love by Songoda <3");
         System.out.println("ServerJars is starting...");
 
         Path jar = setupEnv();
