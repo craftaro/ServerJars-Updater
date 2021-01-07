@@ -7,6 +7,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
@@ -34,12 +35,13 @@ public final class ServerJars {
                 "  \\__ \\/ _ \\/ ___/ | / / _ \\/ ___/_  / / __ `/ ___/ ___/\n" +
                 " ___/ /  __/ /   | |/ /  __/ /  / /_/ / /_/ / /  (__  ) \n" +
                 "/____/\\___/_/    |___/\\___/_/   \\____/\\__,_/_/  /____/  \n" +
-                " ServerJars.com      Made with love by Songoda <3");
+                "ServerJars.com           Made with love by Songoda <3");
         System.out.println("ServerJars is starting...");
 
         Path jar = setupEnv();
         if (jar == null) {
-            System.out.println("Attempting to load last working Jar...");
+            System.out.println("ServerJars could not be reached...");
+            System.out.println("Attempting to load last working Jar.");
             jar = findExistingJar();
             if (jar == null) {
                 System.out.println("All attempts to run failed...");
@@ -58,6 +60,7 @@ public final class ServerJars {
             System.exit(1);
         }
     }
+    
 
     private static Path setupEnv() {
 
@@ -97,7 +100,6 @@ public final class ServerJars {
             System.out.println("Incorrect jar type \"" + type + "\" provided...");
             return null;
         } catch (IOException e) {
-            e.printStackTrace();
             return null;
         }
 
@@ -153,7 +155,10 @@ public final class ServerJars {
         BufferedReader reader = null;
         try {
             URL url = new URL(urlString);
-            reader = new BufferedReader(new InputStreamReader(url.openStream()));
+            URLConnection urlConn = url.openConnection();
+            urlConn.setConnectTimeout(5000);
+            urlConn.setReadTimeout(5000);
+            reader = new BufferedReader(new InputStreamReader(urlConn.getInputStream()));
             StringBuffer buffer = new StringBuffer();
             int read;
             char[] chars = new char[1024];
