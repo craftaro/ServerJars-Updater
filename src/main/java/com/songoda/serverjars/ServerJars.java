@@ -223,7 +223,7 @@ public final class ServerJars {
                 sysMethod.setAccessible(true);
                 sysMethod.invoke(sysLoader, jar.toUri().toURL());
                 if (getJavaVersion() > 8)
-                    System.err.print("\n===========================\n\nNotice: Java has warned you that you are using a workaround if you want to get around this you can add the following arguments: '-Djava.system.class.loader=com.serverjars.updater.ServerJarsLoader'\ne.g 'java -Djava.system.class.loader=com.serverjars.updater.ServerJarsLoader -jar serverjars.jar\n'");
+                    System.err.print("\n===========================\n\nNotice: Java has warned you that you are using a workaround if you want to get around this you can add the following arguments: '-Djava.system.class.loader=com.songoda.serverjars.JarLoader'\ne.g 'java -Djava.system.class.loader=com.songoda.serverjars.JarLoader -jar serverjars.jar\n'");
                 return sysLoader;
             }
         } catch (final MalformedURLException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
