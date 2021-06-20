@@ -1,0 +1,76 @@
+name: 'Build'
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      # Setup Java
+      - uses: actions/setup-java@v2
+        with:
+          java-version: 16
+          distribution: adopt
+
+      # Checkout project files
+      - uses: actions/checkout@v2
+
+      # Caches
+      - name: 'Cache: Maven'
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+
+      # Build project
+      - name: Build with Maven
+        run: 'mvn -B -Duser.name="GitHub Runner on $GITHUB_REPOSITORY (id=$GITHUB_RUN_ID)" clean package'
+
+      # Upload build artifacts
+      - name: 'Upload Build Artifact: ServerJars-*.jar'
+        uses: actions/upload-artifact@v2
+        with:
+          name: ServerJars-artifacts
+          path: ./target/ServerJars-*.jar
+
+#  sonarcloud:
+#    name: SonarCloud
+#    runs-on: ubuntu-latest
+#    steps:
+#      # Setup Java
+#      - uses: actions/setup-java@v2
+#        with:
+#          java-version: 11
+#          distribution: adopt
+#
+#      # Checkout project files
+#      - uses: actions/checkout@v2
+#        with:
+#          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+#
+#      # Caches
+#      - name: 'Cache: Maven'
+#        uses: actions/cache@v2
+#        with:
+#          path: ~/.m2/repository
+#          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+#          restore-keys: ${{ runner.os }}-maven-
+#      - name: 'Cache: SonarCloud'
+#        uses: actions/cache@v2
+#        with:
+#          path: ~/.sonar/cache
+#          key: ${{ runner.os }}-sonar
+#          restore-keys: ${{ runner.os }}-sonar
+#
+#      # SonarCloud static analysis
+#      - name: SonarCloud
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+#          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+#        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
