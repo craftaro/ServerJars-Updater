@@ -32,23 +32,6 @@
             </plugin>
 
             <plugin>
-                <!-- Build an executable JAR -->
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.1.0</version>
-
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <addClasspath>true</addClasspath>
-                            <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>com.songoda.serverjars.ServerJars</mainClass>
-                        </manifest>
-                    </archive>
-                </configuration>
-            </plugin>
-
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.1.0</version>
@@ -65,6 +48,14 @@
                         <configuration>
                             <shadedArtifactAttached>false</shadedArtifactAttached>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <minimizeJar>true</minimizeJar>
+
+                            <transformers>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>com.songoda.serverjars.ServerJars</mainClass>
+                                </transformer>
+                            </transformers>
 
                             <filters>
                                 <filter>
@@ -86,7 +77,7 @@
 
     <repositories>
         <repository>
-            <id>public</id>
+            <id>songoda-public</id>
             <url>https://repo.songoda.com/repository/public/</url>
         </repository>
     </repositories>
@@ -96,6 +87,7 @@
             <groupId>com.serverjars</groupId>
             <artifactId>ServerJarsAPI</artifactId>
             <version>1</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 </project>

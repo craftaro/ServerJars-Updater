@@ -12,27 +12,33 @@ import com.serverjars.api.response.TypesResponse;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.lang.management.ManagementFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
 import java.util.function.Predicate;
 
 public final class ServerJars {
+    private static final File WORKING_DIRECTORY = new File(".");
+    private static final File CFG_FILE = new File(WORKING_DIRECTORY, "serverjars.properties");
+    private static final File CACHE_DIR = new File(WORKING_DIRECTORY, "jar");
+
+    private static final Config cfg = new Config(CFG_FILE);
+
     public static void main(final String[] args) throws IOException, NoSuchAlgorithmException {
+        // TODO
+        // --help
+        // --version
+        // --sj.CFG_OPTION=VALUE
+        // --sjSkipCfg [Skips potential config creation and uses default values if any are missing (everything set via args means no file is created)]
+        // Prefix '--mc.' sends the rest of the string to the mc server (without 'mc.' prefix) [Allows for --mc.help to print spigot help]
+
         System.out.println("   _____                               __               \n" +
                 "  / ___/___  ______   _____  _____    / /___ ___________\n" +
                 "  \\__ \\/ _ \\/ ___/ | / / _ \\/ ___/_  / / __ `/ ___/ ___/\n" +
@@ -43,7 +49,7 @@ public final class ServerJars {
         System.out.println("ServerJars is starting...");
 
         File jar;
-        if (!new File("serverjars.properties").exists()) {
+        if (!CFG_FILE.exists()) {
             System.out.println("\nIt looks like this is your first time using the updater. Would you like to create a config file now? [Y/N]\n" +
                     "If you choose 'n' a default config will be created for you instead.");
             String choice = awaitInput(s -> s.equalsIgnoreCase("y") || s.equalsIgnoreCase("n"), "Please choose Y or N");
@@ -51,6 +57,8 @@ public final class ServerJars {
         } else {
             jar = setupEnv(false);
         }
+
+        new UpdateChecker(cfg); // Check for new app updates
 
         if (jar == null) {
             System.out.println("\nServerJars could not be reached...");
@@ -85,6 +93,8 @@ public final class ServerJars {
                     .inheritIO()
                     .start();
 
+            Runtime.getRuntime().addShutdownHook(new Thread(process::destroy));
+
             while (process.isAlive()) {
                 try {
                     int exitCode = process.waitFor();
@@ -103,40 +113,11 @@ public final class ServerJars {
         }
     }
 
-    private static String getJavaExecutable() {
-        File binDir = new File(System.getProperty("java.home"), "bin");
-        File javaExe = new File(binDir, "java");
-
-        if (!javaExe.exists()) {
-            javaExe = new File(binDir, "java.exe");
-        }
-
-        if (!javaExe.exists()) {
-            System.err.println("We could not find your java executable inside '" + binDir.getAbsolutePath() + "' - Using command 'java' instead");
-
-            return "java";
-        }
-
-        return javaExe.getAbsolutePath();
-    }
-
     private static File setupEnv(boolean guided) throws IOException, NoSuchAlgorithmException {
-        Properties properties = new Properties();
-        Path cache = Paths.get("jar");
+        cfg.load();
 
-        try {
-            InputStream defaultsInput = ServerJars.class.getResourceAsStream("/serverjars.properties");
-            Reader reader = new BufferedReader(new InputStreamReader(defaultsInput));
-            properties.load(reader);
-
-            saveProperties(properties, false);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-
-        String type = (String) properties.get("type");
-        String version = (String) properties.get("version");
+        String type = cfg.getType();
+        String version = cfg.getVersion();
 
         if (guided) {
             System.out.println("Connecting to ServerJars to find available jar types...\n");
@@ -179,11 +160,11 @@ public final class ServerJars {
 
                 version = chosenVersion;
                 System.out.println("Setup completed!\n");
-                properties.setProperty("type", type);
-                properties.setProperty("version", version);
+                cfg.setType(type);
+                cfg.setVersion(version);
 
                 try {
-                    saveProperties(properties, true);
+                    cfg.save();
                 } catch (IOException e) {
                     System.out.println("Could not save to properties file. Default values will be used...\n");
                 }
@@ -205,22 +186,21 @@ public final class ServerJars {
             }
         }
 
-        final Path jar = Paths.get(cache.normalize() + File.separator + jarDetails.getFile());
+        Files.createDirectories(CACHE_DIR.toPath());
+        File jar = new File(CACHE_DIR, jarDetails.getFile());
 
-        String hash = jar.toFile().exists() ? getHashMd5(jar) : "";
+        String hash = jar.exists() ? getHashMd5(jar.toPath()) : "";
         if (hash.isEmpty() || !hash.equals(jarDetails.getHash())) {
             System.out.println(hash.isEmpty() ? "\nDownloading jar..." : "\nUpdate found, downloading...");
 
-            File[] cachedFiles = cache.toFile().listFiles();
+            File[] cachedFiles = CACHE_DIR.listFiles((dir, name) -> name.toLowerCase().endsWith(".jar"));
             if (cachedFiles != null) {
                 for (File f : cachedFiles) {
-                    if (f.getName().endsWith(".jar")) {
-                        f.delete();
-                    }
+                    Files.deleteIfExists(f.toPath());
                 }
             }
 
-            Response response = new JarRequest(type, version.equalsIgnoreCase("latest") ? null : version, jar.toFile()).send();
+            Response response = new JarRequest(type, version.equalsIgnoreCase("latest") ? null : version, jar).send();
             if (!response.isSuccess()) {
                 System.out.println("\nThe jar version \"" + version + "\" was not found in our database...");
                 return null;
@@ -234,26 +214,7 @@ public final class ServerJars {
         String launching = "\nLaunching " + jarDetails.getFile() + "...";
         System.out.println(launching + "\n" + launching.replaceAll("[^.]", ".") + "\n");
 
-        return jar.toFile();
-    }
-
-    private static void saveProperties(Properties properties, boolean overwrite) throws IOException {
-        Path cache = Paths.get("jar");
-        File file = new File("serverjars.properties");
-
-        if (overwrite || !file.exists()) {
-            try (FileOutputStream fileOutputStream = new FileOutputStream(file)) {
-                properties.store(fileOutputStream, "Acceptable Versions (latest, 1.16.4, 1.8, etc...)");
-            }
-        }
-
-        if (!Files.isDirectory(cache)) {
-            Files.createDirectories(cache);
-        }
-
-        try (InputStream input = new FileInputStream(file)) {
-            properties.load(new BufferedReader(new InputStreamReader(input)));
-        }
+        return jar;
     }
 
     private static File findExistingJar() {
@@ -281,6 +242,23 @@ public final class ServerJars {
         }
 
         return null;
+    }
+
+    private static String getJavaExecutable() {
+        File binDir = new File(System.getProperty("java.home"), "bin");
+        File javaExe = new File(binDir, "java");
+
+        if (!javaExe.exists()) {
+            javaExe = new File(binDir, "java.exe");
+        }
+
+        if (!javaExe.exists()) {
+            System.err.println("We could not find your java executable inside '" + binDir.getAbsolutePath() + "' - Using command 'java' instead");
+
+            return "java";
+        }
+
+        return javaExe.getAbsolutePath();
     }
 
     private static String getHashMd5(Path path) throws IOException, NoSuchAlgorithmException {
