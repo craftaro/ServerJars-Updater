@@ -39,14 +39,9 @@ public final class ServerJars {
         // --sjSkipCfg [Skips potential config creation and uses default values if any are missing (everything set via args means no file is created)]
         // Prefix '--mc.' sends the rest of the string to the mc server (without 'mc.' prefix) [Allows for --mc.help to print spigot help]
 
-        System.out.println("   _____                               __               \n" +
-                "  / ___/___  ______   _____  _____    / /___ ___________\n" +
-                "  \\__ \\/ _ \\/ ___/ | / / _ \\/ ___/_  / / __ `/ ___/ ___/\n" +
-                " ___/ /  __/ /   | |/ /  __/ /  / /_/ / /_/ / /  (__  ) \n" +
-                "/____/\\___/_/    |___/\\___/_/   \\____/\\__,_/_/  /____/  \n" +
-                "ServerJars.com           Made with love by Songoda <3\n");
+        System.out.println("\n  █████╗  █████╗ ███████╗ █████╗ ███╗  ██╗ ██████╗██████╗ ██╗██████╗ ███████╗\n ██╔══██╗██╔══██╗██╔════╝██╔══██╗████╗ ██║██╔════╝██╔══██╗██║██╔══██╗██╔════╝\n ██║  ██║██║  ╚═╝█████╗  ███████║██╔██╗██║╚█████╗ ██████╔╝██║██████╔╝█████╗\n ██║  ██║██║  ██╗██╔══╝  ██╔══██║██║╚████║ ╚═══██╗██╔═══╝ ██║██╔══██╗██╔══╝\n ╚█████╔╝╚█████╔╝███████╗██║  ██║██║ ╚███║██████╔╝██║     ██║██║  ██║███████╗\n  ╚════╝  ╚════╝ ╚══════╝╚═╝  ╚═╝╚═╝  ╚══╝╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═╝╚══════╝");
 
-        System.out.println("ServerJars is starting...");
+        System.out.println("\nSearching for updates...");
 
         File jar;
         if (!CFG_FILE.exists()) {
@@ -58,7 +53,7 @@ public final class ServerJars {
             jar = setupEnv(false);
         }
 
-        new UpdateChecker(cfg); // Check for new app updates
+//        new UpdateChecker(cfg); // Check for new app updates
 
         if (jar == null) {
             System.out.println("\nServerJars could not be reached...");
