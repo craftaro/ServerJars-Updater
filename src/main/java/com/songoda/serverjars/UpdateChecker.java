@@ -19,7 +19,7 @@ public class UpdateChecker {
     private static final String DOWNLOAD_URL = "https://github.com/" + GITHUB_PROJECT;
 
     // TODO: Parse app version
-    private static final String APP_VERSION = "3.0.0-DEV";
+    private static final String APP_VERSION = "3.0.0";
 
     public UpdateChecker(Config cfg) {
         if (cfg.isUpdateAvailable() &&
