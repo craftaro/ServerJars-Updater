@@ -27,7 +27,7 @@ import java.util.function.Predicate;
 public final class ServerJars {
     private static final File WORKING_DIRECTORY = new File(".");
     private static final File CFG_FILE = new File(WORKING_DIRECTORY, "serverjars.properties");
-    private static final File CACHE_DIR = new File(WORKING_DIRECTORY, "jar");
+    private static File CACHE_DIR;
 
     private static final Config cfg = new Config(CFG_FILE);
 
@@ -159,6 +159,16 @@ public final class ServerJars {
                 }
 
                 version = chosenVersion;
+
+                System.out.println("\nWould you like to use the always the same server jar for every ServerJars instance? [Y/N]");
+                String alwaysUse = awaitInput(s -> s.equalsIgnoreCase("y") || s.equalsIgnoreCase("n"), "Please choose Y or N");
+
+                if (alwaysUse == null || alwaysUse.equalsIgnoreCase("y")) {
+                    cfg.setUseHome(true);
+                } else {
+                    cfg.setUseHome(false);
+                }
+
                 System.out.println("Setup completed!\n");
                 cfg.setType(type);
                 cfg.setVersion(version);
@@ -186,6 +196,7 @@ public final class ServerJars {
             }
         }
 
+        CACHE_DIR = cfg.getUseHome() ? new File(System.getProperty("user.home"), ".serverjars") : new File(WORKING_DIRECTORY, "jar");
         Files.createDirectories(CACHE_DIR.toPath());
         File jar = new File(CACHE_DIR, jarDetails.getFile());
 

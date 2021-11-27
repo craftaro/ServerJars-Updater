@@ -14,6 +14,7 @@ public class Config {
 
     private static final String DEFAULT_TYPE = "paper";
     private static final String DEFAULT_VERSION = "latest";
+    private static final boolean DEFAULT_USE_HOME = false;
 
     private final Properties properties;
     private final File file;
@@ -39,6 +40,14 @@ public class Config {
 
     String getVersion() {
         return this.properties.getProperty("version", DEFAULT_VERSION);
+    }
+
+    void setUseHome(boolean home) {
+        this.properties.setProperty("useSameJar", String.valueOf(home));
+    }
+
+    boolean getUseHome() {
+        return this.properties.getProperty("useSameJar", String.valueOf(DEFAULT_USE_HOME)).equals("true");
     }
 
     void setLastUpdateCheck(long timestamp) {
