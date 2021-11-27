@@ -160,7 +160,7 @@ public final class ServerJars {
 
                 version = chosenVersion;
 
-                System.out.println("\nWould you like to use the always the same server jar for every ServerJars instance? [Y/N]");
+                System.out.println("\nWould you like to use always the same server jar for every ServerJars instance? [Y/N]");
                 String alwaysUse = awaitInput(s -> s.equalsIgnoreCase("y") || s.equalsIgnoreCase("n"), "Please choose Y or N");
 
                 if (alwaysUse == null || alwaysUse.equalsIgnoreCase("y")) {
