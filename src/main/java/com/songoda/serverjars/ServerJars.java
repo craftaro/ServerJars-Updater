@@ -148,7 +148,7 @@ public final class ServerJars {
                 }
                 type = chosenJar;
                 System.out.println("\nWhat server version would you like to run?" + "\n" + "Leave this blank or type 'latest' for latest");
-                String chosenVersion = awaitInput(s -> true, "Hmm.. that version was somehow incorrect...");
+                String chosenVersion = awaitInput(s -> true, "Hmm... that version was somehow incorrect...");
 
                 if (chosenVersion != null && chosenVersion.isEmpty()) {
                     chosenVersion = "latest";
@@ -208,7 +208,7 @@ public final class ServerJars {
 
             System.out.println("\nJar updated successfully.");
         } else {
-            System.out.println("\nThe jar is up to date.");
+            System.out.println("\nThe jar is up-to-date.");
         }
 
         String launching = "\nLaunching " + jarDetails.getFile() + "...";
