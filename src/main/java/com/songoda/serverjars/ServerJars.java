@@ -25,19 +25,9 @@ import java.util.Objects;
 import java.util.function.Predicate;
 
 public final class ServerJars {
-    private static final File WORKING_DIRECTORY = new File(".");
-    private static final File CFG_FILE = new File(WORKING_DIRECTORY, "serverjars.properties");
-    private static final File CACHE_DIR = new File(WORKING_DIRECTORY, "jar");
-
-    private static final Config cfg = new Config(CFG_FILE);
-
     public static void main(final String[] args) throws IOException, NoSuchAlgorithmException {
-        // TODO
-        // --help
-        // --version
-        // --sj.CFG_OPTION=VALUE
-        // --sjSkipCfg [Skips potential config creation and uses default values if any are missing (everything set via args means no file is created)]
-        // Prefix '--mc.' sends the rest of the string to the mc server (without 'mc.' prefix) [Allows for --mc.help to print spigot help]
+        final File workingDir = new File(".");
+        final File cfgFile = new File(workingDir, "serverjars.properties");
 
         System.out.println("   _____                               __               \n" +
                 "  / ___/___  ______   _____  _____    / /___ ___________\n" +
@@ -57,15 +47,16 @@ public final class ServerJars {
         }
 
         System.out.println("ServerJars is starting...");
+        final Config cfg = new Config(cfgFile);
 
         File jar;
-        if (!CFG_FILE.exists()) {
+        if (!cfgFile.exists()) {
             System.out.println("\nIt looks like this is your first time using the updater. Would you like to create a config file now? [Y/N]\n" +
                     "If you choose 'n' a default config will be created for you instead.");
             String choice = awaitInput(s -> s.equalsIgnoreCase("y") || s.equalsIgnoreCase("n"), "Please choose Y or N");
-            jar = setupEnv(choice == null || choice.equalsIgnoreCase("y"));
+            jar = setupEnv(cfg, new File(workingDir, "jar"), choice == null || choice.equalsIgnoreCase("y"));
         } else {
-            jar = setupEnv(false);
+            jar = setupEnv(cfg, new File(workingDir, "jar"), false);
         }
 
         new UpdateChecker(cfg); // Check for new app updates
@@ -104,6 +95,7 @@ public final class ServerJars {
 
             Runtime.getRuntime().addShutdownHook(new Thread(process::destroy));
 
+            System.gc();
             while (process.isAlive()) {
                 try {
                     int exitCode = process.waitFor();
@@ -122,7 +114,7 @@ public final class ServerJars {
         }
     }
 
-    private static File setupEnv(boolean guided) throws IOException, NoSuchAlgorithmException {
+    private static File setupEnv(Config cfg, File cacheDir, boolean guided) throws IOException, NoSuchAlgorithmException {
         cfg.load();
 
         String type = cfg.getType();
@@ -217,14 +209,14 @@ public final class ServerJars {
             }
         }
 
-        Files.createDirectories(CACHE_DIR.toPath());
-        File jar = new File(CACHE_DIR, jarDetails.getFile());
+        Files.createDirectories(cacheDir.toPath());
+        File jar = new File(cacheDir, jarDetails.getFile());
 
         String hash = jar.exists() ? getHashMd5(jar.toPath()) : "";
         if (hash.isEmpty() || !hash.equals(jarDetails.getHash())) {
             System.out.println(hash.isEmpty() ? "\nDownloading jar..." : "\nUpdate found, downloading...");
 
-            File[] cachedFiles = CACHE_DIR.listFiles((dir, name) -> name.toLowerCase().endsWith(".jar"));
+            File[] cachedFiles = cacheDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".jar"));
             if (cachedFiles != null) {
                 for (File f : cachedFiles) {
                     Files.deleteIfExists(f.toPath());
