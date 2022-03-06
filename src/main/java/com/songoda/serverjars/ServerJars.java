@@ -46,6 +46,16 @@ public final class ServerJars {
                 "/____/\\___/_/    |___/\\___/_/   \\____/\\__,_/_/  /____/  \n" +
                 "ServerJars.com           Made with love by Songoda <3\n");
 
+        if (Runtime.getRuntime().maxMemory() > (512 * 1024 * 1024) /* 512 MiB */) {
+            System.err.println("Warning: We recommend limiting the maximum memory to about 128 MiB (not " + (Runtime.getRuntime().maxMemory() / 1024.0 / 1024.0) + " MiB) for ServerJars.\n" +
+                    "Example: java -Xmx128M -jar ServerJars.jar\n\n" +
+                    "You can configure the Memory used for the Minecraft server in the serverjars.properties file.\n(Waiting for 5 Seconds...)\n");
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException ignored) {
+            }
+        }
+
         System.out.println("ServerJars is starting...");
 
         File jar;
