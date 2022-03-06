@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 public class UpdateChecker {
     private static final String GITHUB_PROJECT = "ServerJars/updater";
     private static final String API_URL = "https://api.github.com/repos/" + GITHUB_PROJECT + "/releases/latest";
-    private static final String DOWNLOAD_URL = "https://github.com/" + GITHUB_PROJECT;
+    private static final String DOWNLOAD_URL = "https://github.com/" + GITHUB_PROJECT + "/releases";
 
     // TODO: Parse app version
     private static final String APP_VERSION = "3.0.0";
