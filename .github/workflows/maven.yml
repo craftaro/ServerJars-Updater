@@ -11,22 +11,15 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
+      # Checkout project files
+      - uses: actions/checkout@v3
+
       # Setup Java
       - uses: actions/setup-java@v2
         with:
-          java-version: 16
-          distribution: adopt
-
-      # Checkout project files
-      - uses: actions/checkout@v2
-
-      # Caches
-      - name: 'Cache: Maven'
-        uses: actions/cache@v2
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-maven-
+          distribution: 'temurin'
+          java-version: '16'
+          cache: 'maven'
 
       # Build project
       - name: Build with Maven
@@ -38,39 +31,3 @@ jobs:
         with:
           name: ServerJars-artifacts
           path: ./target/ServerJars-*.jar
-
-#  sonarcloud:
-#    name: SonarCloud
-#    runs-on: ubuntu-latest
-#    steps:
-#      # Setup Java
-#      - uses: actions/setup-java@v2
-#        with:
-#          java-version: 11
-#          distribution: adopt
-#
-#      # Checkout project files
-#      - uses: actions/checkout@v2
-#        with:
-#          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-#
-#      # Caches
-#      - name: 'Cache: Maven'
-#        uses: actions/cache@v2
-#        with:
-#          path: ~/.m2/repository
-#          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-#          restore-keys: ${{ runner.os }}-maven-
-#      - name: 'Cache: SonarCloud'
-#        uses: actions/cache@v2
-#        with:
-#          path: ~/.sonar/cache
-#          key: ${{ runner.os }}-sonar
-#          restore-keys: ${{ runner.os }}-sonar
-#
-#      # SonarCloud static analysis
-#      - name: SonarCloud
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
-#          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-#        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
