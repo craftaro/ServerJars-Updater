@@ -21,6 +21,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 public final class ServerJars {
@@ -157,10 +158,30 @@ public final class ServerJars {
                 }
 
                 version = chosenVersion;
-                System.out.println("Setup completed!\n");
                 cfg.setType(type);
                 cfg.setVersion(version);
 
+                System.out.println("\nHow much memory would like to allocate to the server? (e.g. 512M or 1G for 1 gigabyte)\n" + "Leave this blank or type '1G' for the default");
+                String memoryInput = awaitInput(s -> s.trim().isEmpty() || looksLikeValidJvmMemoryFormat(s), "That memory format looks incorrect.");
+                if (memoryInput == null || memoryInput.isEmpty()) {
+                    memoryInput = "1G";
+                }
+
+                System.out.println("\nWould you like to use aikar.co's JVM Startup flags (recommended for most users)? [Y/N]");
+                if (Objects.equals(awaitInput(s -> s.equalsIgnoreCase("y") || s.equalsIgnoreCase("n"), "Please choose Y or N"), "y")) {
+                    cfg.setJvmArgs("-Xms" + memoryInput + " -Xmx" + memoryInput + " -XX:+UseG1GC -XX:+ParallelRefProcEnabled " +
+                            "-XX:MaxGCPauseMillis=200 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC " +
+                            "-XX:+AlwaysPreTouch -XX:G1NewSizePercent=30 -XX:G1MaxNewSizePercent=40 " +
+                            "-XX:G1HeapRegionSize=8M -XX:G1ReservePercent=20 -XX:G1HeapWastePercent=5 " +
+                            "-XX:G1MixedGCCountTarget=4 -XX:InitiatingHeapOccupancyPercent=15 " +
+                            "-XX:G1MixedGCLiveThresholdPercent=90 -XX:G1RSetUpdatingPauseTimePercent=5 " +
+                            "-XX:SurvivorRatio=32 -XX:+PerfDisableSharedMem -XX:MaxTenuringThreshold=1 " +
+                            "-Dusing.aikars.flags=https://mcflags.emc.gs -Daikars.new.flags=true");
+                } else {
+                    cfg.setJvmArgs("-Xmx" + memoryInput);
+                }
+
+                System.out.println("Setup completed!\n");
                 try {
                     cfg.save();
                 } catch (IOException ex) {
@@ -270,5 +291,9 @@ public final class ServerJars {
         }
 
         return hash.toString();
+    }
+
+    private static boolean looksLikeValidJvmMemoryFormat(String memory) {
+        return memory.matches("[0-9]+[KMG]?");
     }
 }
