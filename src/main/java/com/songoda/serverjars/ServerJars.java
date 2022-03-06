@@ -182,7 +182,7 @@ public final class ServerJars {
                     cfg.setJvmArgs("-Xmx" + memoryInput);
                 }
 
-                System.out.println("Setup completed!\n");
+                System.out.println("Setup completed!\n" + "You might want to check the config file for additional stuff.\n");
                 try {
                     cfg.save();
                 } catch (IOException ex) {
