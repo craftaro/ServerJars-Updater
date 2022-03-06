@@ -14,6 +14,7 @@ public class Config {
 
     private static final String DEFAULT_TYPE = "paper";
     private static final String DEFAULT_VERSION = "latest";
+    private static final String DEFAULT_JVM_ARGS = "-Xmx1G";
 
     private final Properties properties;
     private final File file;
@@ -39,6 +40,20 @@ public class Config {
 
     String getVersion() {
         return this.properties.getProperty("version", DEFAULT_VERSION);
+    }
+
+    void setJvmArgs(String jvmArgs) {
+        this.properties.setProperty("jvmArgs", jvmArgs);
+    }
+
+    String[] getJvmArgs() {
+        String[] args = this.properties.getProperty("jvmArgs", DEFAULT_JVM_ARGS).split(" -");
+
+        for (int i = 0; i < args.length; ++i) {
+            args[i] = (i != 0 ? "-" : "") + args[i].trim();
+        }
+
+        return args;
     }
 
     void setLastUpdateCheck(long timestamp) {
@@ -87,5 +102,6 @@ public class Config {
 
         this.properties.setProperty("type", DEFAULT_TYPE);
         this.properties.setProperty("version", DEFAULT_VERSION);
+        this.properties.setProperty("jvmArgs", DEFAULT_JVM_ARGS);
     }
 }

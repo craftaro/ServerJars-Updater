@@ -14,7 +14,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.management.ManagementFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
@@ -74,7 +73,7 @@ public final class ServerJars {
             System.out.println("\nThe attempt was successful!");
         }
 
-        String[] vmArgs = ManagementFactory.getRuntimeMXBean().getInputArguments().toArray(new String[0]);
+        String[] vmArgs = cfg.getJvmArgs();
 
         /* Start Minecraft server */
         String[] cmd = new String[vmArgs.length + args.length + 3];
