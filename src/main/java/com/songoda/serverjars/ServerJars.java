@@ -26,8 +26,7 @@ import java.util.function.Predicate;
 
 public final class ServerJars {
     public static void main(final String[] args) throws IOException, NoSuchAlgorithmException {
-        final File workingDir = new File(".");
-        final File cfgFile = new File(workingDir, "serverjars.properties");
+        final File cfgFile = new File(".", "serverjars.properties");
 
         System.out.println("   _____                               __               \n" +
                 "  / ___/___  ______   _____  _____    / /___ ___________\n" +
@@ -54,9 +53,9 @@ public final class ServerJars {
             System.out.println("\nIt looks like this is your first time using the updater. Would you like to create a config file now? [Y/N]\n" +
                     "If you choose 'n' a default config will be created for you instead.");
             String choice = awaitInput(s -> s.equalsIgnoreCase("y") || s.equalsIgnoreCase("n"), "Please choose Y or N");
-            jar = setupEnv(cfg, new File(workingDir, "jar"), choice == null || choice.equalsIgnoreCase("y"));
+            jar = setupEnv(cfg, new File(cfg.getServerJarDirectory()), choice == null || choice.equalsIgnoreCase("y"));
         } else {
-            jar = setupEnv(cfg, new File(workingDir, "jar"), false);
+            jar = setupEnv(cfg, new File(cfg.getServerJarDirectory()), false);
         }
 
         new UpdateChecker(cfg); // Check for new app updates
@@ -217,7 +216,7 @@ public final class ServerJars {
             System.out.println(hash.isEmpty() ? "\nDownloading jar..." : "\nUpdate found, downloading...");
 
             File[] cachedFiles = cacheDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".jar"));
-            if (cachedFiles != null) {
+            if (cachedFiles != null && cfg.shouldDeleteOtherJarVersions()) {
                 for (File f : cachedFiles) {
                     Files.deleteIfExists(f.toPath());
                 }

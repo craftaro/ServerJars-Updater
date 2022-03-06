@@ -15,6 +15,7 @@ public class Config {
     private static final String DEFAULT_TYPE = "paper";
     private static final String DEFAULT_VERSION = "latest";
     private static final String DEFAULT_JVM_ARGS = "-Xmx1G";
+    private static final String DEFAULT_SERVER_JAR_DIRECTORY = "./jar";
 
     private final Properties properties;
     private final File file;
@@ -54,6 +55,14 @@ public class Config {
         }
 
         return args;
+    }
+
+    String getServerJarDirectory() {
+        return this.properties.getProperty("MinecraftJarDirectory", DEFAULT_SERVER_JAR_DIRECTORY);
+    }
+
+    boolean shouldDeleteOtherJarVersions() {
+        return Boolean.parseBoolean(this.properties.getProperty("deleteOtherMinecraftJarVersions", "true"));
     }
 
     void setLastUpdateCheck(long timestamp) {
@@ -100,8 +109,11 @@ public class Config {
     void reset() {
         this.properties.clear();
 
-        this.properties.setProperty("type", DEFAULT_TYPE);
-        this.properties.setProperty("version", DEFAULT_VERSION);
-        this.properties.setProperty("jvmArgs", DEFAULT_JVM_ARGS);
+        setType(DEFAULT_TYPE);
+        setVersion(DEFAULT_VERSION);
+        setJvmArgs(DEFAULT_JVM_ARGS);
+
+        this.properties.setProperty("jarsDirectory", DEFAULT_SERVER_JAR_DIRECTORY);
+        this.properties.setProperty("deleteOtherMinecraftJarVersions", "true");
     }
 }
