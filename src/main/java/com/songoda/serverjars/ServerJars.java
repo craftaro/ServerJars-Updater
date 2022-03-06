@@ -89,7 +89,6 @@ public final class ServerJars {
 
         try {
             Process process = new ProcessBuilder(cmd)
-                    .command(cmd)
                     .inheritIO()
                     .start();
 
@@ -165,11 +164,13 @@ public final class ServerJars {
 
                 try {
                     cfg.save();
-                } catch (IOException e) {
+                } catch (IOException ex) {
                     System.out.println("Could not save to properties file. Default values will be used...\n");
+                    System.err.println(ex.getMessage());
                 }
             } else {
                 System.out.println("Connection to ServerJars could not be established. Default values will be used...\n");
+                System.err.println(typesResponse.getErrorMessage());
             }
         }
 
