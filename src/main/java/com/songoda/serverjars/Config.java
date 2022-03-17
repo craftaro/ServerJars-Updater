@@ -113,7 +113,7 @@ public class Config {
         setVersion(DEFAULT_VERSION);
         setJvmArgs(DEFAULT_JVM_ARGS);
 
-        this.properties.setProperty("jarsDirectory", DEFAULT_SERVER_JAR_DIRECTORY);
+        this.properties.setProperty("MinecraftJarDirectory", DEFAULT_SERVER_JAR_DIRECTORY);
         this.properties.setProperty("deleteOtherMinecraftJarVersions", "true");
     }
 }
