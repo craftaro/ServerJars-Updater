@@ -1,4 +1,4 @@
-package com.songoda.serverjars;
+package de.tomino.serverjars;
 
 import com.serverjars.api.JarDetails;
 import com.serverjars.api.Response;

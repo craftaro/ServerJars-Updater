@@ -1,4 +1,4 @@
-package com.songoda.serverjars;
+package de.tomino.serverjars;
 
 import java.net.URL;
 import java.net.URLClassLoader;

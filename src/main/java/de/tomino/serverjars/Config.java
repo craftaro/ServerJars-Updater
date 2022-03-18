@@ -1,4 +1,4 @@
-package com.songoda.serverjars;
+package de.tomino.serverjars;
 
 import java.io.File;
 import java.io.FileInputStream;
