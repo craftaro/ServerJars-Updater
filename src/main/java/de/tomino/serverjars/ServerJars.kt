@@ -17,25 +17,31 @@ import java.util.function.Predicate
 import kotlin.system.exitProcess
 
 object ServerJars {
+
     private val WORKING_DIRECTORY = File(".")
     private val CFG_FILE = File(WORKING_DIRECTORY, "serverjars.properties")
     private val CACHE_DIR = File(WORKING_DIRECTORY, "jar")
     private val cfg = Config(CFG_FILE)
+
     @Throws(IOException::class, NoSuchAlgorithmException::class)
+
     @JvmStatic
     fun main(args: Array<String>) {
+
         println("\n  █████╗  █████╗ ███████╗ █████╗ ███╗  ██╗ ██████╗██████╗ ██╗██████╗ ███████╗\n ██╔══██╗██╔══██╗██╔════╝██╔══██╗████╗ ██║██╔════╝██╔══██╗██║██╔══██╗██╔════╝\n ██║  ██║██║  ╚═╝█████╗  ███████║██╔██╗██║╚█████╗ ██████╔╝██║██████╔╝█████╗\n ██║  ██║██║  ██╗██╔══╝  ██╔══██║██║╚████║ ╚═══██╗██╔═══╝ ██║██╔══██╗██╔══╝\n ╚█████╔╝╚█████╔╝███████╗██║  ██║██║ ╚███║██████╔╝██║     ██║██║  ██║███████╗\n  ╚════╝  ╚════╝ ╚══════╝╚═╝  ╚═╝╚═╝  ╚══╝╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═╝╚══════╝")
         println("\nSearching for updates...")
         var jar: File?
+
         jar = if (!CFG_FILE.exists()) {
             println(
-                """It looks like this is your first time using the updater. Would you like to create a config file now? [Y/N]
+                    """It looks like this is your first time using the updater. Would you like to create a config file now? [Y/N]
                 If you choose 'n' a default config will be created for you instead.
                 """.trimIndent()
             )
+
             val choice = awaitInput(
-                { s: String -> s.equals("y", ignoreCase = true) || s.equals("n", ignoreCase = true) },
-                "Please choose Y or N"
+                    { s: String -> s.equals("y", ignoreCase = true) || s.equals("n", ignoreCase = true) },
+                    "Please choose Y or N"
             )
             setupEnv(choice == null || choice.equals("y", ignoreCase = true))
         } else {
@@ -62,9 +68,9 @@ object ServerJars {
         System.arraycopy(args, 0, cmd, 3 + vmArgs.size, args.size)
         try {
             val process = ProcessBuilder(*cmd)
-                .command(*cmd)
-                .inheritIO()
-                .start()
+                    .command(*cmd)
+                    .inheritIO()
+                    .start()
             Runtime.getRuntime().addShutdownHook(Thread { process.destroy() })
             while (process.isAlive) {
                 try {
@@ -73,7 +79,7 @@ object ServerJars {
                         System.err.println("Server unexpectedly exited with code $exitCode")
                     }
                     break
-                } catch (ignore: InterruptedException) {}
+                } catch (ignore: InterruptedException) { TODO() }
             }
         } catch (ex: IOException) {
             System.err.println("Error starting the Minecraft server.")
@@ -95,12 +101,7 @@ object ServerJars {
                 for (typeList in typeMap.values) {
                     types.addAll(typeList)
                 }
-                println(
-                    """
-    What server type would you like to use?
-    Available types:
-    """.trimIndent()
-                )
+                println("""What server type would you like to use? Available types:""".trimIndent())
                 val typeString = StringBuilder()
                 var i = 0
                 for (t in types) {
@@ -113,21 +114,15 @@ object ServerJars {
                 }
                 println(typeString.substring(0, typeString.length - 2) + ".")
                 var chosenJar = awaitInput(
-                    { s: String -> types.contains(s.lowercase(Locale.getDefault())) },
-                    "The jar type '%s' was not listed above in the type list\nPlease choose another."
+                        { s: String -> types.contains(s.lowercase(Locale.getDefault())) },
+                        "The jar type '%s' was not listed above in the type list\nPlease choose another."
                 )
                 if (chosenJar == null) {
                     chosenJar = "paper"
                     println("Unable to get user input -> defaulting to paper.")
                 }
                 type = chosenJar
-                println(
-                    """
-
-    What server version would you like to run?
-    Leave this blank or type 'latest' for latest
-    """.trimIndent()
-                )
+                println("""What server version would you like to run?Leave this blank or type 'latest' for latest""".trimIndent())
                 var chosenVersion = awaitInput({ true }, "Hmm.. that version was somehow incorrect...")
                 if (chosenVersion != null && chosenVersion.isEmpty()) {
                     chosenVersion = "latest"
@@ -167,14 +162,14 @@ object ServerJars {
         if (hash.isEmpty() || hash != jarDetails.hash) {
             println(if (hash.isEmpty()) "\nDownloading jar..." else "\nUpdate found, downloading...")
             val cachedFiles =
-                CACHE_DIR.listFiles { _: File?, name: String -> name.lowercase(Locale.getDefault()).endsWith(".jar") }
+                    CACHE_DIR.listFiles { _: File?, name: String -> name.lowercase(Locale.getDefault()).endsWith(".jar") }
             if (cachedFiles != null) {
                 for (f in cachedFiles) {
                     Files.deleteIfExists(f.toPath())
                 }
             }
             val response =
-                JarRequest(type, if (version.equals("latest", ignoreCase = true)) null else version, jar).send()
+                    JarRequest(type, if (version.equals("latest", ignoreCase = true)) null else version, jar).send()
             if (!response.isSuccess) {
                 println("\nThe jar version \"$version\" was not found in our database...")
                 return null
@@ -183,23 +178,14 @@ object ServerJars {
         } else {
             println("\nThe jar is up to date.")
         }
-        val launching = """
-
-            Launching ${jarDetails.file}...
-            """.trimIndent()
-        println(
-            """
-    $launching
-    ${launching.replace("[^.]".toRegex(), ".")}
-
-    """.trimIndent()
-        )
+        val launching = "\n" + """Launching ${jarDetails.file}...""".trimIndent() + "\n\n"
+        println("""$launching${launching.replace("[^.]".toRegex(), ".")}""".trimIndent() + "\n")
         return jar
     }
 
     private fun findExistingJar(): File? {
         val files = File("jar")
-            .listFiles { _: File?, name: String -> name.lowercase(Locale.getDefault()).endsWith(".jar") }
+                .listFiles { _: File?, name: String -> name.lowercase(Locale.getDefault()).endsWith(".jar") }
         return files?.get(0)
     }
 
@@ -212,15 +198,10 @@ object ServerJars {
                 if (predicate.test(line)) {
                     return line
                 } else {
-                    System.err.println(
-                        """
-
-    ${String.format(errorMessage, line)}
-    """.trimIndent()
-                    )
+                    System.err.println(String.format(errorMessage, line).trimIndent())
                 }
             }
-        } catch (ignore: IOException) {}
+        } catch (ignore: IOException) { TODO() }
         return null
     }
 

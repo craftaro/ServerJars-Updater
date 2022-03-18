@@ -16,7 +16,7 @@
 
     <build>
         <defaultGoal>clean install</defaultGoal>
-        <finalName>ServerJars-${project.version}</finalName>
+        <finalName>server</finalName>
 
         <plugins>
 
