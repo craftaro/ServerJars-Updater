@@ -1,4 +1,4 @@
-package com.songoda.serverjars;
+package de.tomino.serverjars;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
