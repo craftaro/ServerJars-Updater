@@ -1,4 +1,4 @@
-# updater
+# Updater
 Advanced fork of  Serverjar´s updater written in Kotlin
 
 
