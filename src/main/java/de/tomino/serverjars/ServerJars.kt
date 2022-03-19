@@ -112,7 +112,6 @@ object ServerJars {
                         "-XX:SurvivorRatio=32 -XX:+PerfDisableSharedMem -XX:MaxTenuringThreshold=1 " +
                         "-Dusing.aikars.flags=https://mcflags.emc.gs -Daikars.new.flags=true");
 
-
                 println("""What server type would you like to use? Available types:""".trimIndent())
                 val typeString = StringBuilder()
                 var i = 0
