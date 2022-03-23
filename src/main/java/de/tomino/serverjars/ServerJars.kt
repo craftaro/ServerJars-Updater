@@ -111,7 +111,7 @@ object ServerJars {
                         "-XX:G1MixedGCCountTarget=4 -XX:InitiatingHeapOccupancyPercent=15 " +
                         "-XX:G1MixedGCLiveThresholdPercent=90 -XX:G1RSetUpdatingPauseTimePercent=5 " +
                         "-XX:SurvivorRatio=32 -XX:+PerfDisableSharedMem -XX:MaxTenuringThreshold=1 " +
-                        "-Dusing.aikars.flags=https://mcflags.emc.gs -Daikars.new.flags=true");
+                        "-Dusing.aikars.flags=https://mcflags.emc.gs -Daikars.new.flags=true")
 
                 println("""What server type would you like to use? Available types:""".trimIndent())
                 val typeString = StringBuilder()
@@ -170,7 +170,7 @@ object ServerJars {
         }
         Files.createDirectories(CACHE_DIR.toPath())
         val jar = File(CACHE_DIR, jarDetails!!.file)
-        val hash = if (jar.exists()) HashMD5.get(jar.toPath()) else ""
+        val hash = if (jar.exists()) HashMD5[jar.toPath()] else ""
         if (hash.isEmpty() || hash != jarDetails.hash) {
             println(if (hash.isEmpty()) "\nDownloading jar..." else "\nUpdate found, downloading...")
             val cachedFiles =
@@ -201,22 +201,6 @@ object ServerJars {
         return files?.get(0)
     }
 
-    fun awaitInput(predicate: Predicate<String>, errorMessage: String): String? {
-        try {
-            val bufferedReader = BufferedReader(InputStreamReader(System.`in`))
-            var line: String
-            while (bufferedReader.readLine().also { line = it } != null) {
-                line = line.trim { it <= ' ' }
-                if (predicate.test(line)) {
-                    return line
-                } else {
-                    System.err.println(String.format(errorMessage, line).trimIndent())
-                }
-            }
-        } catch (ignore: IOException) { TODO() }
-        return null
-    }
-
     private val javaExecutable: String
         get() {
             val binDir = File(System.getProperty("java.home"), "bin")
@@ -230,4 +214,20 @@ object ServerJars {
             }
             return javaExe.absolutePath
         }
+}
+
+fun awaitInput(predicate: Predicate<String>, errorMessage: String): String? {
+    try {
+        val bufferedReader = BufferedReader(InputStreamReader(System.`in`))
+        var line: String
+        while (bufferedReader.readLine().also { line = it } != null) {
+            line = line.trim { it <= ' ' }
+            if (predicate.test(line)) {
+                return line
+            } else {
+                System.err.println(String.format(errorMessage, line).trimIndent())
+            }
+        }
+    } catch (ignore: IOException) { TODO() }
+    return null
 }

@@ -8,10 +8,9 @@ import java.nio.file.Files
 import java.util.*
 
 class Config(private val file: File) {
-    private val properties: Properties
+    private val properties: Properties = Properties()
 
     init {
-        properties = Properties()
         reset()
     }
 
