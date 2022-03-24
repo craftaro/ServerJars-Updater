@@ -89,7 +89,7 @@ class Config(private val file: File) {
 
     companion object {
         private const val HEADER = "Acceptable Versions (latest, 1.16.4, 1.8, etc...)"
-        private const val DEFAULT_TYPE = "paper"
+        private const val DEFAULT_TYPE = "purpur"
         private const val DEFAULT_VERSION = "latest"
         private const val DEFAULT_JVM_ARGS = "-Xmx1G"
         private const val DEFAULT_SERVER_JAR_DIRECTORY = "./jar"
