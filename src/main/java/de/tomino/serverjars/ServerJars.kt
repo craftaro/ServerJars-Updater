@@ -5,10 +5,7 @@ import com.serverjars.api.request.AllRequest
 import com.serverjars.api.request.JarRequest
 import com.serverjars.api.request.LatestRequest
 import com.serverjars.api.request.TypesRequest
-import java.io.BufferedReader
-import java.io.File
-import java.io.IOException
-import java.io.InputStreamReader
+import java.io.*
 import java.lang.management.ManagementFactory
 import java.nio.file.Files
 import java.security.NoSuchAlgorithmException
@@ -30,16 +27,13 @@ object ServerJars {
     fun main(args: Array<String>) {
 
         println("\n  █████╗  █████╗ ███████╗ █████╗ ███╗  ██╗ ██████╗██████╗ ██╗██████╗ ███████╗\n ██╔══██╗██╔══██╗██╔════╝██╔══██╗████╗ ██║██╔════╝██╔══██╗██║██╔══██╗██╔════╝\n ██║  ██║██║  ╚═╝█████╗  ███████║██╔██╗██║╚█████╗ ██████╔╝██║██████╔╝█████╗\n ██║  ██║██║  ██╗██╔══╝  ██╔══██║██║╚████║ ╚═══██╗██╔═══╝ ██║██╔══██╗██╔══╝\n ╚█████╔╝╚█████╔╝███████╗██║  ██║██║ ╚███║██████╔╝██║     ██║██║  ██║███████╗\n  ╚════╝  ╚════╝ ╚══════╝╚═╝  ╚═╝╚═╝  ╚══╝╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═╝╚══════╝")
-        println("\nSearching for updates...")
+        println("\nSearching for updates... \n")
 
         var jar: File?
 
         jar = if (!CFG_FILE.exists()) {
-            println(
-                    """It looks like this is your first time using the updater. Would you like to create a config file now? [Y/N]
-                If you choose 'n' a default config will be created for you instead.
-                """.trimIndent()
-            )
+            println("It looks like this is your first time using the updater. Would you like to create a config file now?")
+            println("[Y/N] If you choose 'n' a default config will be created for you instead.")
 
             val choice = awaitInput(
                     { s: String -> s.equals("y", ignoreCase = true) || s.equals("n", ignoreCase = true) },
@@ -60,6 +54,14 @@ object ServerJars {
             }
             println("\nThe attempt was successful!")
         }
+
+        if (CFG_FILE.exists()) {
+            println("\nAccepting eula...");
+            addEulaFile(WORKING_DIRECTORY)
+        } else {
+            println("\nNot good...");
+        }
+
         val vmArgs = ManagementFactory.getRuntimeMXBean().inputArguments.toTypedArray()
 
         val cmd = arrayOfNulls<String>(vmArgs.size + args.size + 3)
@@ -144,6 +146,16 @@ object ServerJars {
                     println("Unable to get user input -> defaulting to latest.")
                 }
                 version = chosenVersion
+
+                println("\nBy changing the setting below to TRUE you are indicating your agreement to our EULA (https://account.mojang.com/documents/minecraft_eula).")
+                println("For running the server its necessary to accept the eula. Would you accept the eula?");
+
+                val acceptInput = awaitInput({ true }, "Hmm.. your input was somehow incorrect...")
+                if (!acceptInput.equals(acceptInput, true) || !acceptInput.equals("y", true) || !acceptInput.equals("accept", true) || acceptInput.equals("yes")) {
+                    println("\nYou need to accept the eula to build a minecraft server!")
+                    exitProcess(0)
+                }
+
                 println("Setup completed!\n")
                 cfg.type = type
                 cfg.version = version
@@ -214,6 +226,32 @@ object ServerJars {
             }
             return javaExe.absolutePath
         }
+
+    fun addEulaFile(directory: File) {
+        val eulaFile = File("$directory/eula.txt")
+        try {
+            eulaFile.createNewFile()
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+        var outputStream: OutputStream? = null
+        try {
+            outputStream = Files.newOutputStream(eulaFile.toPath())
+            val properties = Properties()
+            properties.setProperty("eula", "true")
+            properties.store(outputStream, "By changing the setting below to TRUE you are indicating your agreement to our EULA (https://account.mojang.com/documents/minecraft_eula).")
+        } catch (e: IOException) {
+            e.printStackTrace()
+        } finally {
+            if (outputStream != null) {
+                try {
+                    outputStream.close()
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
 }
 
 fun awaitInput(predicate: Predicate<String>, errorMessage: String): String? {
