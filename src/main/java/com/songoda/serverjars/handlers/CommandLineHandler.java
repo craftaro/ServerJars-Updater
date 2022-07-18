@@ -3,6 +3,7 @@ package com.songoda.serverjars.handlers;
 import com.songoda.serverjars.objects.Option;
 import com.songoda.serverjars.objects.options.Help;
 import com.songoda.serverjars.objects.options.MinecraftArgument;
+import com.songoda.serverjars.objects.options.MinecraftArgumentDD;
 import com.songoda.serverjars.objects.options.ServerJarsConfig;
 import com.songoda.serverjars.objects.options.Version;
 import com.songoda.serverjars.utils.Utils;
@@ -15,6 +16,7 @@ public class CommandLineHandler {
             new Help(),
             new Version(),
             new MinecraftArgument(),
+            new MinecraftArgumentDD(),
             new ServerJarsConfig(),
     };
 

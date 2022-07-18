@@ -17,9 +17,9 @@ repositories {
 dependencies {
     implementation 'com.serverjars:ServerJarsAPI:1'
     implementation 'me.tongfei:progressbar:0.9.3'
+    implementation 'commons-io:commons-io:2.11.0'
 
     compileOnly 'org.projectlombok:lombok:1.18.24'
-    implementation 'commons-cli:commons-cli:1.5.0'
 	annotationProcessor 'org.projectlombok:lombok:1.18.24'
 	testCompileOnly 'org.projectlombok:lombok:1.18.24'
 	testAnnotationProcessor 'org.projectlombok:lombok:1.18.24'

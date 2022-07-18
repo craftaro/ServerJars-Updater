@@ -11,14 +11,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Collection;
 
 public class Utils {
-
-    public static Collection<String> query(Collection<String> collection, String query) {
-        String regex = regexFromGlob(query);
-        return collection.stream().filter(it -> it.matches(regex)).toList();
-    }
 
     public static String regexFromGlob(String glob) {
         StringBuilder out = new StringBuilder("^");
@@ -103,5 +97,24 @@ public class Utils {
 
     public static File folder(String path) {
         return folder(new File(path));
+    }
+
+    public static boolean isWindows() {
+        return (System.getProperty("os") != null ? System.getProperty("os") : "").toLowerCase().contains("windows");
+    }
+
+    public static JsonObject getJarDetails(String type, String version)  {
+        try {
+            String url = String.format("https://serverjars.com/api/fetchDetails/%s/%s", type, version);
+            OnlineRequest.Response response = new OnlineRequest(url).connect();
+            if(response.getStatusCode() != 200) {
+                return null;
+            }
+
+            return response.responseAsJson().getAsJsonObject().getAsJsonObject("response");
+        }catch (IOException e){
+            Utils.debug(e);
+            return null;
+        }
     }
 }

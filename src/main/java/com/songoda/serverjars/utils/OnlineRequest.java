@@ -1,16 +1,14 @@
 package com.songoda.serverjars.utils;
 
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.Getter;
-import lombok.Setter;
 
+import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.stream.Collectors;
@@ -31,16 +29,17 @@ public class OnlineRequest {
         long time = this.timeCachedResponse.getOrDefault(this.getUrl(), 0L);
         if(!this.cachedResponse.containsKey(this.getUrl()) || (time == 0L || (System.currentTimeMillis() - time) < 15000L)) {
             URL url = new URL(this.getUrl());
-            HttpURLConnection connection = ((HttpURLConnection) url.openConnection());
+            HttpsURLConnection connection = ((HttpsURLConnection) url.openConnection());
             Response response = new Response(connection);
             this.cachedResponse.put(this.getUrl(), response);
+            this.timeCachedResponse.put(this.getUrl(), System.currentTimeMillis());
             return response;
         }
 
         return this.cachedResponse.get(this.getUrl());
     }
 
-    public class Response {
+    public static class Response {
 
         @Getter
         private final int statusCode;
@@ -54,7 +53,7 @@ public class OnlineRequest {
         @Getter
         private final InputStream inputStream;
 
-        public Response(HttpURLConnection connection) throws IOException {
+        public Response(HttpsURLConnection connection) throws IOException {
             this.statusCode = connection.getResponseCode();
             this.statusMessage = connection.getResponseMessage();
             this.inputStream = connection.getInputStream();

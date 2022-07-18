@@ -8,13 +8,13 @@ import java.util.Arrays;
 public class MinecraftArgument extends Option {
 
     public MinecraftArgument() {
-        super("mc.*", "Adds the given argument to be ran directly as argument of the server launcher.");
+        super("mc.*", "Adds the given argument to be executed directly as argument (with a single dash) of the server launcher. (Ex: --mc.nogui > -nogui)");
     }
 
     @Override
     public void run(String data) {
         data = data.replaceFirst("mc.", "");
-        if(!data.isBlank()) {
+        if(!data.isEmpty()) {
             ServerJars.minecraftArguments.add(data);
         }
     }
