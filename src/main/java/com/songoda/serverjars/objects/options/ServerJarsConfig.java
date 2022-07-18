@@ -29,8 +29,12 @@ public class ServerJarsConfig extends Option {
             case "version":
                 ServerJars.config.setVersion(value);
                 break;
+            case "useHomeDirectory":
+                ServerJars.config.setUseHomeDirectory(Utils.bool(value));
+                break;
             case "debug":
                 ServerJars.config.setDebug(Utils.bool(value));
+                break;
         }
     }
 }

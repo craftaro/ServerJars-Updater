@@ -94,4 +94,14 @@ public class Utils {
             debug(builder.toString());
         }
     }
+
+    public static File folder(File file) {
+        if(!file.exists())
+            file.mkdirs();
+        return file;
+    }
+
+    public static File folder(String path) {
+        return folder(new File(path));
+    }
 }

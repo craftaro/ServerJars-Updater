@@ -1,6 +1,7 @@
 package com.songoda.serverjars.handlers;
 
 import com.songoda.serverjars.ServerJars;
+import com.songoda.serverjars.utils.Utils;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -59,6 +60,14 @@ public class ConfigHandler {
 
     public String getVersion(){
         return properties.getProperty("version", "latest");
+    }
+
+    public boolean useHomeDirectory() {
+        return Utils.bool(properties.getProperty("useHomeDirectory", "true"));
+    }
+
+    public void setUseHomeDirectory(boolean useHomeDirectory){
+        properties.setProperty("useHomeDirectory", Boolean.toString(useHomeDirectory));
     }
 
     public void setLastUpdateCheck(long timestamp) {

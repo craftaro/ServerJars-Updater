@@ -29,7 +29,8 @@ import java.util.function.Predicate;
 public final class ServerJars {
     public static final File WORKING_DIRECTORY = new File(".");
     public static final File CFG_FILE = new File(WORKING_DIRECTORY, "serverjars.properties");
-    public static final File CACHE_DIR = new File(WORKING_DIRECTORY, "jar");
+    public static final File HOME_DIR = Utils.folder(new File(Utils.folder(System.getProperty("user.home")), ".serverjars/"));
+    private static File CACHE_DIR = new File(WORKING_DIRECTORY, "jar");
 
     public static final List<String> minecraftArguments = new ArrayList<>();
     public static final ConfigHandler config = new ConfigHandler();
@@ -156,6 +157,11 @@ public final class ServerJars {
                 }
 
                 version = chosenVersion;
+
+                System.out.println("\\nWould you like to use always the same server jar for every ServerJars instance? [Y/N]");
+                String alwaysUse = awaitInput(s -> s.equalsIgnoreCase("y") || s.equalsIgnoreCase("n"), "Please choose Y or N");
+                config.setUseHomeDirectory(alwaysUse == null || alwaysUse.equalsIgnoreCase("y"));
+
                 System.out.println("Setup completed!\n");
                 config.setType(type);
                 config.setVersion(version);
@@ -168,6 +174,10 @@ public final class ServerJars {
             } else {
                 System.out.println("Connection to ServerJars could not be established. Default values will be used...\n");
             }
+        }
+
+        if(config.useHomeDirectory()) { // Now we set up the cache dir to be the home dir if is set to
+            CACHE_DIR = new File(HOME_DIR, "jar");
         }
 
         Utils.debug("Loading " + type + " (" + version + ")");
