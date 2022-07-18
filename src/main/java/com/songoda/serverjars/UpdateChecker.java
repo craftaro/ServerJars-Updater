@@ -2,6 +2,7 @@ package com.songoda.serverjars;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.songoda.serverjars.handlers.ConfigHandler;
 import org.semver.Version;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -18,10 +19,9 @@ public class UpdateChecker {
     private static final String API_URL = "https://api.github.com/repos/" + GITHUB_PROJECT + "/releases/latest";
     private static final String DOWNLOAD_URL = "https://github.com/" + GITHUB_PROJECT;
 
-    // TODO: Parse app version
-    private static final String APP_VERSION = "3.0.0";
+    private static final String APP_VERSION = "@version@";
 
-    public UpdateChecker(Config cfg) {
+    public UpdateChecker(ConfigHandler cfg) {
         if (cfg.isUpdateAvailable() &&
                 // Recheck after some time just to be on the safe side
                 cfg.getLastUpdateCheck() + TimeUnit.DAYS.toMillis(3) <= System.currentTimeMillis()) {

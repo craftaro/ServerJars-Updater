@@ -1,14 +1,15 @@
 package com.songoda.serverjars;
 
 import com.serverjars.api.JarDetails;
-import com.serverjars.api.Response;
 import com.serverjars.api.request.AllRequest;
-import com.serverjars.api.request.JarRequest;
 import com.serverjars.api.request.LatestRequest;
 import com.serverjars.api.request.TypesRequest;
 import com.serverjars.api.response.AllResponse;
 import com.serverjars.api.response.LatestResponse;
 import com.serverjars.api.response.TypesResponse;
+import com.songoda.serverjars.handlers.CommandLineHandler;
+import com.songoda.serverjars.handlers.ConfigHandler;
+import com.songoda.serverjars.utils.Utils;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -20,45 +21,43 @@ import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
 public final class ServerJars {
-    private static final File WORKING_DIRECTORY = new File(".");
-    private static final File CFG_FILE = new File(WORKING_DIRECTORY, "serverjars.properties");
-    private static final File CACHE_DIR = new File(WORKING_DIRECTORY, "jar");
+    public static final File WORKING_DIRECTORY = new File(".");
+    public static final File CFG_FILE = new File(WORKING_DIRECTORY, "serverjars.properties");
+    public static final File CACHE_DIR = new File(WORKING_DIRECTORY, "jar");
 
-    private static final Config cfg = new Config(CFG_FILE);
+    public static final List<String> minecraftArguments = new ArrayList<>();
+    public static final ConfigHandler config = new ConfigHandler();
 
     public static void main(final String[] args) throws IOException, NoSuchAlgorithmException {
-        // TODO
-        // --help
-        // --version
-        // --sj.CFG_OPTION=VALUE
-        // --sjSkipCfg [Skips potential config creation and uses default values if any are missing (everything set via args means no file is created)]
-        // Prefix '--mc.' sends the rest of the string to the mc server (without 'mc.' prefix) [Allows for --mc.help to print spigot help]
-
         System.out.println("   _____                               __               \n" +
                 "  / ___/___  ______   _____  _____    / /___ ___________\n" +
                 "  \\__ \\/ _ \\/ ___/ | / / _ \\/ ___/_  / / __ `/ ___/ ___/\n" +
                 " ___/ /  __/ /   | |/ /  __/ /  / /_/ / /_/ / /  (__  ) \n" +
                 "/____/\\___/_/    |___/\\___/_/   \\____/\\__,_/_/  /____/  \n" +
                 "ServerJars.com           Made with love by Songoda <3\n");
-
-        System.out.println("ServerJars is starting...");
+        Utils.debug("Loading CommandLineHandler...");
+        new CommandLineHandler(args);
+        Utils.debug("Initializing configuration...");
+        config.init();
 
         File jar;
-        if (!CFG_FILE.exists()) {
+        if (!config.isSkipConfigCreation()) {
             System.out.println("\nIt looks like this is your first time using the updater. Would you like to create a config file now? [Y/N]\n" +
                     "If you choose 'n' a default config will be created for you instead.");
             String choice = awaitInput(s -> s.equalsIgnoreCase("y") || s.equalsIgnoreCase("n"), "Please choose Y or N");
             jar = setupEnv(choice == null || choice.equalsIgnoreCase("y"));
         } else {
+            System.out.println("Skipping config creation and using default values...");
             jar = setupEnv(false);
         }
 
-        new UpdateChecker(cfg); // Check for new app updates
+        new UpdateChecker(config); // Check for new app updates
 
         if (jar == null) {
             System.out.println("\nServerJars could not be reached...");
@@ -74,18 +73,15 @@ public final class ServerJars {
             System.out.println("\nThe attempt was successful!");
         }
 
-        String[] vmArgs = ManagementFactory.getRuntimeMXBean().getInputArguments().toArray(new String[0]);
-
         /* Start Minecraft server */
-        String[] cmd = new String[vmArgs.length + args.length + 3];
-        cmd[0] = getJavaExecutable();
+        LinkedList<String> cmd = new LinkedList<>(); // This will be the list of commands to be run
+        cmd.add(getJavaExecutable()); // The 'java' cmd
+        cmd.addAll(ManagementFactory.getRuntimeMXBean().getInputArguments()); // We pass the vm arguments
+        cmd.add("-jar"); // Now we add the '-jar' argument
+        cmd.add(jar.getAbsolutePath()); // Pass the server location
+        cmd.addAll(minecraftArguments.stream().map(it -> "-" + it).toList()); // Pass the minecraft arguments that we got with '--mc.*'
 
-        System.arraycopy(vmArgs, 0, cmd, 1, vmArgs.length);
-
-        cmd[1 + vmArgs.length] = "-jar";
-        cmd[2 + vmArgs.length] = jar.getAbsolutePath();
-
-        System.arraycopy(args, 0, cmd, 3 + vmArgs.length, args.length);
+        Utils.debug("Running command: " + String.join(" ", cmd));
 
         try {
             Process process = new ProcessBuilder(cmd)
@@ -104,8 +100,7 @@ public final class ServerJars {
                     }
 
                     break;
-                } catch (InterruptedException ignore) {
-                }
+                } catch (InterruptedException ignore) { }
             }
         } catch (IOException ex) {
             System.err.println("Error starting the Minecraft server.");
@@ -114,10 +109,13 @@ public final class ServerJars {
     }
 
     private static File setupEnv(boolean guided) throws IOException, NoSuchAlgorithmException {
-        cfg.load();
+        if(!config.isSkipConfigCreation()) {
+            config.reset();
+        }
+        config.load();
 
-        String type = cfg.getType();
-        String version = cfg.getVersion();
+        String type = config.getType();
+        String version = config.getVersion();
 
         if (guided) {
             System.out.println("Connecting to ServerJars to find available jar types...\n");
@@ -152,19 +150,18 @@ public final class ServerJars {
 
                 if (chosenVersion != null && chosenVersion.isEmpty()) {
                     chosenVersion = "latest";
-                }
-                if (chosenVersion == null) {
+                } else if (chosenVersion == null) {
                     chosenVersion = "latest";
                     System.out.println("Unable to get user input -> defaulting to latest.");
                 }
 
                 version = chosenVersion;
                 System.out.println("Setup completed!\n");
-                cfg.setType(type);
-                cfg.setVersion(version);
+                config.setType(type);
+                config.setVersion(version);
 
                 try {
-                    cfg.save();
+                    config.save();
                 } catch (IOException e) {
                     System.out.println("Could not save to properties file. Default values will be used...\n");
                 }
@@ -173,11 +170,10 @@ public final class ServerJars {
             }
         }
 
+        Utils.debug("Loading " + type + " (" + version + ")");
+
         JarDetails jarDetails = null;
-        if (version.equals("latest")) {
-            LatestResponse latestResponse = new LatestRequest(type).send();
-            jarDetails = latestResponse.latestJar;
-        } else {
+        if (!version.equals("latest")) {
             AllResponse allResponse = new AllRequest(type).send();
             for (JarDetails jar : allResponse.getJars()) {
                 if (jar.getVersion().equalsIgnoreCase(version)) {
@@ -186,13 +182,19 @@ public final class ServerJars {
             }
         }
 
-        Files.createDirectories(CACHE_DIR.toPath());
-        File jar = new File(CACHE_DIR, jarDetails.getFile());
+        if(jarDetails == null) {
+            if(!version.equals("latest")){ // Only show the error message if is not the latest version what we're looking for.
+                System.out.println("Could not fetch jar details for the given version '" + version + "'. Using latest...");
+            }
+            LatestResponse latestResponse = new LatestRequest(type).send();
+            jarDetails = latestResponse.latestJar;
+        }
+
+        Files.createDirectories(CACHE_DIR.toPath()); // Create the cached files directory
+        File jar = new File(CACHE_DIR, jarDetails.getFile()); // This is the server jar
 
         String hash = jar.exists() ? getHashMd5(jar.toPath()) : "";
         if (hash.isEmpty() || !hash.equals(jarDetails.getHash())) {
-            System.out.println(hash.isEmpty() ? "\nDownloading jar..." : "\nUpdate found, downloading...");
-
             File[] cachedFiles = CACHE_DIR.listFiles((dir, name) -> name.toLowerCase().endsWith(".jar"));
             if (cachedFiles != null) {
                 for (File f : cachedFiles) {
@@ -200,13 +202,12 @@ public final class ServerJars {
                 }
             }
 
-            Response response = new JarRequest(type, version.equalsIgnoreCase("latest") ? null : version, jar).send();
-            if (!response.isSuccess()) {
-                System.out.println("\nThe jar version \"" + version + "\" was not found in our database...");
+            boolean download = Utils.downloadJar(type, version, jar, hash.isEmpty());
+            if (!download) {
                 return null;
             }
 
-            System.out.println("\nJar updated successfully.");
+            System.out.println("\nJar successfully " + (hash.isEmpty() ? "downloaded" : "updated") + ".");
         } else {
             System.out.println("\nThe jar is up to date.");
         }

@@ -1,0 +1,36 @@
+name: 'Build'
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+jobs:
+  build:
+    # Set up the OS
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout the Code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        # Set up the JDK
+      - name: Set up JDK 16
+        uses: actions/setup-java@v3
+        with:
+          distribution: adopt
+          java-version: 16
+      # Make gradle executable
+      - name: Make gradle executable
+        run: chmod +x gradlew
+      # Clean, Test, Build (in that order to save the artifact to the action)
+      - uses: burrunan/gradle-cache-action@v1
+        name: Clean, Test and Build Jar
+        with:
+          job-id: jdk16
+          arguments: clean test shadowJar
+          gradle-version: wrapper
+      # Now we store the artifact in the action
+      - name: Upload the artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ServerJars
+          path: ./build/libs/ServerJars.jar
