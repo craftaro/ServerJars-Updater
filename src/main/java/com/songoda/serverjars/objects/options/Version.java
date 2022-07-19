@@ -11,5 +11,6 @@ public class Version extends Option {
     @Override
     public void run(String data) {
         System.out.println("Running version: v@version@");
+        System.exit(0);
     }
 }
