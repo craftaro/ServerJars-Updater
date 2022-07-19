@@ -42,6 +42,7 @@ public class ConfigHandler {
         properties.clear();
         this.setType(this.getType());
         this.setVersion(this.getVersion());
+        this.setUseHomeDirectory(this.useHomeDirectory());
     }
 
     public void save() throws IOException{
@@ -65,7 +66,7 @@ public class ConfigHandler {
     }
 
     public boolean useHomeDirectory() {
-        return Utils.bool(properties.getProperty("useHomeDirectory", "true"));
+        return Utils.bool(properties.getProperty("useHomeDirectory", "false"));
     }
 
     public void setUseHomeDirectory(boolean useHomeDirectory){
