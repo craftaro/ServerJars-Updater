@@ -47,10 +47,14 @@ public final class ServerJars {
 
         File jar;
         if (!config.isSkipConfigCreation()) {
-            System.out.println("\nIt looks like this is your first time using the updater. Would you like to create a config file now? [Y/N]\n" +
-                    "If you choose 'n' a default config will be created for you instead.");
-            String choice = awaitInput(s -> s.equalsIgnoreCase("y") || s.equalsIgnoreCase("n"), "Please choose Y or N");
-            jar = setupEnv(choice == null || choice.equalsIgnoreCase("y"));
+            if(!CFG_FILE.exists()) {
+                System.out.println("\nIt looks like this is your first time using the updater. Would you like to create a config file now? [Y/N]\n" +
+                                   "If you choose 'n' a default config will be created for you instead.");
+                String choice = awaitInput(s -> s.equalsIgnoreCase("y") || s.equalsIgnoreCase("n"), "Please choose Y or N");
+                jar = setupEnv(choice == null || choice.equalsIgnoreCase("y"));
+            } else {
+                jar = setupEnv(false);
+            }
         } else {
             System.out.println("Skipping config creation and using default values...");
             jar = setupEnv(false);
@@ -126,6 +130,13 @@ public final class ServerJars {
     private static File setupEnv(boolean guided) throws IOException, NoSuchAlgorithmException, InterruptedException {
         if(!config.isSkipConfigCreation()) {
             config.reset();
+            if(!guided) {
+                try {
+                    config.save();
+                }catch(IOException e){
+                    System.out.println("Could not save to properties file. Please rerun ServerJars to save the config.");
+                }
+            }
         }
         config.load();
 

@@ -40,6 +40,8 @@ public class ConfigHandler {
 
     public void reset() {
         properties.clear();
+        this.setType(this.getType());
+        this.setVersion(this.getVersion());
     }
 
     public void save() throws IOException{
