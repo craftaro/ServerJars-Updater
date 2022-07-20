@@ -213,7 +213,8 @@ public final class ServerJars {
         if(jarDetails == null) {
             if(!version.equals("latest")){ // Only show the error message if is not the latest version what we're looking for.
                 System.out.println("Could not fetch jar details for the given version '" + version + "'. Using latest...");
-                jarDetails = Utils.getJarDetails(type, "latest");
+                config.setVersion("latest");
+                return setupEnv(false);
             }
 
             if(jarDetails == null) {
