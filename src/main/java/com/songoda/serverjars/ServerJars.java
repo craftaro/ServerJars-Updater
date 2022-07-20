@@ -70,6 +70,7 @@ public final class ServerJars {
 
             if (jar == null) {
                 System.out.println("\nAll attempts to run failed...");
+                System.out.println("\nMake sure that you're running a valid jar and version. You can use '--sj.debug' to find more information about this error.");
                 System.exit(1);
             }
 
@@ -137,8 +138,8 @@ public final class ServerJars {
                     System.out.println("Could not save to properties file. Please rerun ServerJars to save the config.");
                 }
             }
+            config.load();
         }
-        config.load();
 
         String type = config.getType();
         String version = config.getVersion();
@@ -279,10 +280,10 @@ public final class ServerJars {
             System.out.println("\n"+(updateFound ? "The system detected forge as server type" : "The forge runner could not be found.")+". We are now going to run the forge installer to update the libraries...");
             String[] cmd = new String[]{getJavaExecutable(), "-jar", jar.getAbsolutePath(), "--installServer"};
             new ProcessBuilder(cmd)
-                    .directory(WORKING_DIRECTORY)
-                    .command(cmd)
-                    .start()
-                    .waitFor(); // We wait for the installer to finish to then run the server.
+            .directory(WORKING_DIRECTORY)
+            .command(cmd)
+            .start()
+            .waitFor(); // We wait for the installer to finish to then run the server.
         }
 
         String launching = "\nLaunching " + jarDetails.get("file").getAsString() + "...";
@@ -293,9 +294,9 @@ public final class ServerJars {
 
     private static File findExistingJar() {
         File[] files = new File("jar")
-                .listFiles((dir, name) -> name.toLowerCase().endsWith(".jar"));
+        .listFiles((dir, name) -> name.toLowerCase().endsWith(".jar"));
 
-        return files != null ? files[0] : null;
+        return files != null ? (files.length > 0 ? files[0] : null) : null;
     }
 
     private static String awaitInput(Predicate<String> predicate, String errorMessage) {

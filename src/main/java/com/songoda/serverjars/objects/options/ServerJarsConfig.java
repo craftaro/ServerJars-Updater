@@ -12,7 +12,7 @@ public class ServerJarsConfig extends Option {
 
     @Override
     public void run(String data) {
-        data = data.split("\\.")[1];
+        data = data.split("\\.", 2)[1];
         String[] args = data.split("=");
         String key = args[0];
         String value = args.length == 1 ? "true" : args[1];

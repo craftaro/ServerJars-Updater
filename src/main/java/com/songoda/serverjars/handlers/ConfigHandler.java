@@ -34,7 +34,14 @@ public class ConfigHandler {
 
     public void load() throws IOException {
         if(ServerJars.CFG_FILE.exists()){
+            String type = this.getType(), version = this.getVersion();
+            boolean useHomeDirectory = this.useHomeDirectory();
             properties.load(new FileInputStream(ServerJars.CFG_FILE));
+            if(this.isSkipConfigCreation()){
+                this.setType(type);
+                this.setVersion(version);
+                this.setUseHomeDirectory(useHomeDirectory);
+            }
         }
     }
 
