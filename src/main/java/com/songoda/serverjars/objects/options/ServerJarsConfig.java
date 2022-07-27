@@ -23,17 +23,30 @@ public class ServerJarsConfig extends Option {
             case "skipConfigCreation":
                 ServerJars.config.setSkipConfigCreation(Utils.bool(value));
                 break;
+            case "serverCategory":
+                ServerJars.config.setCategory(value);
+                ServerJars.config.setUseCategoryCli(true);
+                break;
             case "serverType":
                 ServerJars.config.setType(value);
+                ServerJars.config.setUseTypeCli(true);
                 break;
             case "version":
                 ServerJars.config.setVersion(value);
+                ServerJars.config.setUseVersionCli(true);
                 break;
             case "useHomeDirectory":
                 ServerJars.config.setUseHomeDirectory(Utils.bool(value));
+                ServerJars.config.setUseHomeDirCli(true);
                 break;
             case "debug":
                 ServerJars.config.setDebug(Utils.bool(value));
+                break;
+            case "apiDomain":
+                ServerJars.config.setApiDomain(value);
+                break;
+            case "useHttps":
+                ServerJars.config.setUseHttps(Utils.bool(value));
                 break;
         }
     }

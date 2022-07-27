@@ -18,15 +18,17 @@ public class ConfigHandler {
 
     @Getter
     @Setter
-    private boolean skipConfigCreation = false, debug = false;
+    private boolean skipConfigCreation = false, debug = false, useHttps = true, useVersionCli = false, useTypeCli = false, useCategoryCli = false, useHomeDirCli = false;
+
+    @Getter
+    @Setter
+    private String apiDomain = "serverjars.com";
 
     public void init() {
         try {
             if(!this.skipConfigCreation && !ServerJars.CFG_FILE.exists()) { // Create the config if it doesn't exist, and we aren't skipping it
                 ServerJars.CFG_FILE.createNewFile();
             }
-
-            this.load();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -34,26 +36,48 @@ public class ConfigHandler {
 
     public void load() throws IOException {
         if(ServerJars.CFG_FILE.exists()){
-            String type = this.getType(), version = this.getVersion();
+            String category = this.getCategory(), type = this.getType(), version = this.getVersion();
             boolean useHomeDirectory = this.useHomeDirectory();
             properties.load(new FileInputStream(ServerJars.CFG_FILE));
-            if(this.isSkipConfigCreation()){
-                this.setType(type);
+
+            if(useVersionCli) { // To give priority to the cli
                 this.setVersion(version);
+            }
+
+            if(useCategoryCli){ // To give priority to the cli
+                this.setCategory(category);
+            }
+
+            if(useTypeCli) { // To give priority to the cli
+                this.setType(type);
+            }
+
+            if(useHomeDirCli){ // To give priority to the cli
                 this.setUseHomeDirectory(useHomeDirectory);
             }
         }
     }
 
     public void reset() {
+        String category = this.getCategory(), type = this.getType(), version = this.getVersion();
+        boolean useHomeDir = this.useHomeDirectory();
         properties.clear();
-        this.setType(this.getType());
-        this.setVersion(this.getVersion());
-        this.setUseHomeDirectory(this.useHomeDirectory());
+        this.setCategory(useCategoryCli ? category : this.getCategory());
+        this.setType(useTypeCli ? type : this.getType());
+        this.setVersion(useVersionCli ? version : this.getVersion());
+        this.setUseHomeDirectory(useHomeDirCli ? useHomeDir : this.useHomeDirectory());
     }
 
     public void save() throws IOException{
         properties.store(new FileOutputStream(ServerJars.CFG_FILE), HEADER);
+    }
+
+    public String getCategory() {
+        return properties.getProperty("category", "servers");
+    }
+
+    public void setCategory(String category){
+        properties.setProperty("category", category);
     }
 
     public String getType(){

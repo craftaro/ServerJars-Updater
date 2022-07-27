@@ -4,11 +4,11 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import lombok.Getter;
 
-import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.stream.Collectors;
@@ -26,17 +26,18 @@ public class OnlineRequest {
     }
 
     public Response connect() throws IOException {
-        long time = this.timeCachedResponse.getOrDefault(this.getUrl(), 0L);
-        if(!this.cachedResponse.containsKey(this.getUrl()) || (time == 0L || (System.currentTimeMillis() - time) < 15000L)) {
+        String key = this.getUrl();
+        long time = this.timeCachedResponse.getOrDefault(key, 0L);
+        if(!this.cachedResponse.containsKey(key) || (time == 0L || (System.currentTimeMillis() - time) < 15000L)) {
             URL url = new URL(this.getUrl());
-            HttpsURLConnection connection = ((HttpsURLConnection) url.openConnection());
+            HttpURLConnection connection = ((HttpURLConnection) url.openConnection());
             Response response = new Response(connection);
-            this.cachedResponse.put(this.getUrl(), response);
-            this.timeCachedResponse.put(this.getUrl(), System.currentTimeMillis());
+            this.cachedResponse.put(key, response);
+            this.timeCachedResponse.put(key, System.currentTimeMillis());
             return response;
         }
 
-        return this.cachedResponse.get(this.getUrl());
+        return this.cachedResponse.get(key);
     }
 
     public static class Response {
@@ -53,7 +54,7 @@ public class OnlineRequest {
         @Getter
         private final InputStream inputStream;
 
-        public Response(HttpsURLConnection connection) throws IOException {
+        public Response(HttpURLConnection connection) throws IOException {
             this.statusCode = connection.getResponseCode();
             this.statusMessage = connection.getResponseMessage();
             this.inputStream = connection.getInputStream();

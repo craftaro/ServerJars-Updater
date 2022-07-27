@@ -23,8 +23,11 @@ buildNumber.properties
 .idea/**/dbnavigator.xml
 .idea/**/gradle.xml
 .idea/**/libraries
+.idea/**/compiler.xml
 cmake-build-*/
 .idea/**/mongoSettings.xml
+d.iea
+
 *.iws
 out/
 .idea_modules/
