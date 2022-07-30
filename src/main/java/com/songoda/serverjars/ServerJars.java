@@ -1,11 +1,10 @@
 package com.songoda.serverjars;
 
 import com.google.gson.JsonObject;
-import com.serverjars.api.request.TypesRequest;
-import com.serverjars.api.response.TypesResponse;
 import com.songoda.serverjars.handlers.CommandLineHandler;
 import com.songoda.serverjars.handlers.ConfigHandler;
 import com.songoda.serverjars.utils.Utils;
+import lombok.Getter;
 import org.apache.commons.io.FileUtils;
 
 import java.io.BufferedReader;
@@ -20,7 +19,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -29,6 +27,9 @@ public final class ServerJars {
     public static final File CFG_FILE = new File(WORKING_DIRECTORY, "serverjars.properties");
     public static final File HOME_DIR = Utils.folder(new File(Utils.folder(System.getProperty("user.home")), ".serverjars/"));
     private static File CACHE_DIR = new File(WORKING_DIRECTORY, "jar");
+
+    @Getter
+    private static boolean isFirstStart = false;
 
     public static final List<String> minecraftArguments = new ArrayList<>();
     public static final ConfigHandler config = new ConfigHandler();
@@ -41,13 +42,15 @@ public final class ServerJars {
                 "/____/\\___/_/    |___/\\___/_/   \\____/\\__,_/_/  /____/  \n" +
                 "ServerJars.com           Made with love by Songoda <3\n");
         Utils.debug("Loading CommandLineHandler...");
+        isFirstStart = !CFG_FILE.exists();
+        config.init();
         new CommandLineHandler(args);
         Utils.debug("Initializing configuration...");
-        config.init();
+        config.load();
 
         File jar;
         if (!config.isSkipConfigCreation()) {
-            if(!CFG_FILE.exists()) {
+            if(isFirstStart) {
                 System.out.println("\nIt looks like this is your first time using the updater. Would you like to create a config file now? [Y/N]\n" +
                                    "If you choose 'n' a default config will be created for you instead.");
                 String choice = awaitInput(s -> s.equalsIgnoreCase("y") || s.equalsIgnoreCase("n"), "Please choose Y or N");
@@ -56,9 +59,11 @@ public final class ServerJars {
                 jar = setupEnv(false);
             }
         } else {
-            System.out.println("Skipping config creation and using default values...");
+            System.out.println("Skipping config creation...");
             jar = setupEnv(false);
         }
+
+        Utils.updateCache();
 
         new UpdateChecker(config); // Check for new app updates
 
@@ -105,7 +110,6 @@ public final class ServerJars {
 
         try {
             Process process = new ProcessBuilder(cmd)
-                    .command(cmd)
                     .inheritIO()
                     .start();
 
@@ -131,71 +135,85 @@ public final class ServerJars {
     private static File setupEnv(boolean guided) throws IOException, NoSuchAlgorithmException, InterruptedException {
         if(!config.isSkipConfigCreation()) {
             config.reset();
-            if(!guided) {
-                try {
-                    config.save();
-                }catch(IOException e){
-                    System.out.println("Could not save to properties file. Please rerun ServerJars to save the config.");
-                }
-            }
             config.load();
         }
 
         String type = config.getType();
+        String category = config.getCategory();
         String version = config.getVersion();
 
         if (guided) {
-            System.out.println("Connecting to ServerJars to find available jar types...\n");
-            TypesResponse typesResponse = new TypesRequest().send();
-            if (typesResponse.isSuccess()) {
-                Map<String, List<String>> typeMap = typesResponse.getAllTypes();
-                List<String> types = new ArrayList<>();
-                for (List<String> typeList : typeMap.values()) {
-                    types.addAll(typeList);
-                }
-
-                System.out.println("What server type would you like to use?" + "\n" + "Available types:");
-                StringBuilder typeString = new StringBuilder();
+            System.out.println("Connecting to ServerJars to find available jar categories...\n");
+            List<String> categories = Utils.fetchCategories();
+            if(categories != null){
+                System.out.println("Which server category would you like to use?" + "\n" + "Available categories:");
+                StringBuilder categoryString = new StringBuilder();
                 int i = 0;
-                for (String t : types) {
+                for (String t : categories) {
                     if (i == 6) {
-                        typeString.append("\n");
+                        categoryString.append("\n");
                         i = 0;
                     }
-                    typeString.append(t).append(", ");
+                    categoryString.append(t).append(", ");
                     i++;
                 }
-                System.out.println(typeString.substring(0, typeString.length() - 2) + ".");
-                String chosenJar = awaitInput(s -> types.contains(s.toLowerCase()), "The jar type '%s' was not listed above in the type list\nPlease choose another.");
-                if (chosenJar == null) {
-                    chosenJar = "paper";
-                    System.out.println("Unable to get user input -> defaulting to paper.");
+                System.out.println(categoryString.substring(0, categoryString.length() - 2) + ".");
+                String choosenCategory = awaitInput(s -> categories.contains(s.toLowerCase()), "The jar type '%s' was not listed above in the type list\nPlease choose another.");
+                if (choosenCategory == null) {
+                    choosenCategory = "servers";
+                    System.out.println("Unable to get user input -> defaulting to servers.");
                 }
-                type = chosenJar;
-                System.out.println("\nWhat server version would you like to run?" + "\n" + "Leave this blank or type 'latest' for latest");
-                String chosenVersion = awaitInput(s -> true, "Hmm.. that version was somehow incorrect...");
+                category = choosenCategory;
 
-                if (chosenVersion != null && chosenVersion.isEmpty()) {
-                    chosenVersion = "latest";
-                } else if (chosenVersion == null) {
-                    chosenVersion = "latest";
-                    System.out.println("Unable to get user input -> defaulting to latest.");
-                }
+                System.out.println("Connecting to ServerJars to find available jar types...\n");
+                List<String> types = Utils.fetchTypes(category);
+                if (types != null) {
+                    System.out.println("Which server type would you like to use?" + "\n" + "Available types:");
+                    StringBuilder typeString = new StringBuilder();
+                    i = 0;
+                    for (String t : types) {
+                        if (i == 6) {
+                            typeString.append("\n");
+                            i = 0;
+                        }
+                        typeString.append(t).append(", ");
+                        i++;
+                    }
+                    System.out.println(typeString.substring(0, typeString.length() - 2) + ".");
+                    String chosenJar = awaitInput(s -> types.contains(s.toLowerCase()), "The jar type '%s' was not listed above in the type list\nPlease choose another.");
+                    if (chosenJar == null) {
+                        chosenJar = "paper";
+                        System.out.println("Unable to get user input -> defaulting to paper.");
+                    }
+                    type = chosenJar;
+                    System.out.println("\nWhat server version would you like to run?" + "\n" + "Leave this blank or type 'latest' for latest");
+                    String chosenVersion = awaitInput(s -> true, "Hmm.. that version was somehow incorrect...");
 
-                version = chosenVersion;
+                    if (chosenVersion != null && chosenVersion.isEmpty()) {
+                        chosenVersion = "latest";
+                    } else if (chosenVersion == null) {
+                        chosenVersion = "latest";
+                        System.out.println("Unable to get user input -> defaulting to latest.");
+                    }
 
-                System.out.println("\\nWould you like to use always the same server jar for every ServerJars instance? [Y/N]");
-                String alwaysUse = awaitInput(s -> s.equalsIgnoreCase("y") || s.equalsIgnoreCase("n"), "Please choose Y or N");
-                config.setUseHomeDirectory(alwaysUse == null || alwaysUse.equalsIgnoreCase("y"));
+                    version = chosenVersion;
 
-                System.out.println("Setup completed!\n");
-                config.setType(type);
-                config.setVersion(version);
+                    System.out.println("\nWould you like to use always the same server jar for every ServerJars instance? [Y/N]");
+                    String alwaysUse = awaitInput(s -> s.equalsIgnoreCase("y") || s.equalsIgnoreCase("n"), "Please choose Y or N");
+                    config.setUseHomeDirectory(alwaysUse == null || alwaysUse.equalsIgnoreCase("y"));
 
-                try {
-                    config.save();
-                } catch (IOException e) {
-                    System.out.println("Could not save to properties file. Default values will be used...\n");
+                    System.out.println("Setup completed!\n");
+                    config.setCategory(category);
+                    config.setType(type);
+                    config.setVersion(version);
+
+                    try {
+                        config.save();
+                    } catch (IOException e) {
+                        System.out.println("Could not save to properties file. Default values will be used...\n");
+                    }
+                } else {
+                    System.out.println("Connection to ServerJars could not be established. Default values will be used...\n");
                 }
             } else {
                 System.out.println("Connection to ServerJars could not be established. Default values will be used...\n");
@@ -206,49 +224,37 @@ public final class ServerJars {
             CACHE_DIR = new File(HOME_DIR, "jar");
         }
 
-        Utils.debug("Loading " + type + " (" + version + ")");
+        Utils.debug("Loading " + type + " (" + category + "), version: " + version + "...");
 
-        JsonObject jarDetails = Utils.getJarDetails(type, version);
+        JsonObject jarDetails = Utils.getJarDetails(category, type, version);
 
         if(jarDetails == null) {
             if(!version.equals("latest")){ // Only show the error message if is not the latest version what we're looking for.
                 System.out.println("Could not fetch jar details for the given version '" + version + "'. Using latest...");
                 config.setVersion("latest");
-                return setupEnv(false);
+                try {
+                    config.save();
+                    return setupEnv(false);
+                }catch (IOException e){
+                    System.err.println("Failed to save the config. Please try again later");
+                    Utils.debug(e);
+                }
             }
 
-            if(jarDetails == null) {
-                System.out.println("Could not find a suitable jar for you to use. Checking for cached jars...");
-                // The naming should be "type-version.jar"
-                File cached = null;
-                File[] cachedFiles = CACHE_DIR.listFiles();
-                if(cachedFiles == null) cachedFiles = new File[0];
-                for(File cachedFile : cachedFiles){
-                    if(cachedFile.getName().toLowerCase().startsWith(type)){
-                        cached = cachedFile;
-                        break;
-                    }
-                }
+            System.out.println("Could not find a suitable jar for you to use. Checking for cached jars...");
+            // The naming should be "type-version.jar"
+            JsonObject cachedDetails = Utils.detailsFromCache(category, type, version);
 
-                if(cached == null) {
-                    System.out.println("Could not find a cached jar to use. Maybe you should check if the serverjars.com site is up and that you have a working internet connection.");
-                    System.exit(1);
-                }
-
-                System.out.println("Found " + cached.getName() + " in the cache directory. Using this jar.");
-
-                // Manually add the details
-                jarDetails = new JsonObject();
-                jarDetails.addProperty("file", cached.getName());
-                jarDetails.addProperty("version", cached.getName().replaceFirst(type+"-", "").replace(".jar", ""));
-                jarDetails.addProperty("md5", getHashMd5(cached.toPath()));
-                JsonObject size = new JsonObject();
-                size.addProperty("bytes", cached.length());
-                size.addProperty("MB", cached.length() / 1024 / 1024);
-                jarDetails.add("size", size);
-                jarDetails.addProperty("built", cached.lastModified());
-                jarDetails.addProperty("cached", true);
+            if(cachedDetails == null) {
+                System.out.println("Could not find a cached jar to use. Maybe you should check if the site is up and that you have a working internet connection.");
+                System.exit(1);
             }
+
+            File cached = new File(CACHE_DIR, cachedDetails.get("file").getAsString());
+
+            System.out.println("Found " + cached.getName() + " in the cache directory. Using this jar.");
+            jarDetails = cachedDetails;
+            jarDetails.addProperty("cached", true);
         }
 
         Files.createDirectories(CACHE_DIR.toPath()); // Create the cached files directory
@@ -264,7 +270,7 @@ public final class ServerJars {
                 }
             }
 
-            boolean download = Utils.downloadJar(type, version, jar, hash.isEmpty());
+            boolean download = Utils.downloadJar(category, type, version, jar, hash.isEmpty());
             if (!download) {
                 return null;
             }
@@ -276,15 +282,17 @@ public final class ServerJars {
             }
         }
 
+        Utils.debug("Running jar with hash: " + jarDetails.get("md5").getAsString());
+
         File forgeRunner = new File(WORKING_DIRECTORY, Utils.isWindows() ? "run.bat" : "run.sh");
         if(type.equalsIgnoreCase("forge") && (updateFound || !forgeRunner.exists())) {
             System.out.println("\n"+(updateFound ? "The system detected forge as server type" : "The forge runner could not be found.")+". We are now going to run the forge installer to update the libraries...");
             String[] cmd = new String[]{getJavaExecutable(), "-jar", jar.getAbsolutePath(), "--installServer"};
+            Utils.debug("Running forge installer: " + String.join(" ", cmd));
             new ProcessBuilder(cmd)
-            .directory(WORKING_DIRECTORY)
-            .command(cmd)
-            .start()
-            .waitFor(); // We wait for the installer to finish to then run the server.
+                .directory(WORKING_DIRECTORY)
+                .start()
+                .waitFor(); // We wait for the installer to finish to then run the server.
         }
 
         String launching = "\nLaunching " + jarDetails.get("file").getAsString() + "...";
