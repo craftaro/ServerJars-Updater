@@ -119,12 +119,12 @@ public class Utils {
             int bytes = jarDetails.getAsJsonObject("response").getAsJsonObject("size").get("bytes").getAsInt();
             int bufferSize = 1024;
             ProgressBarBuilder progressBarBuilder = new ProgressBarBuilder()
-            .setTaskName(String.format("%s %s (%s)", downloading ? "Downloading" : "Updating", type, version))
-            .setUnit("MiB", bufferSize)
-            .setInitialMax(bytes/bufferSize)
-            .showSpeed()
-            .setStyle(ProgressBarStyle.UNICODE_BLOCK)
-            .continuousUpdate();
+                .setTaskName(String.format("%s %s (%s)", downloading ? "Downloading" : "Updating", type, version))
+                .setUnit("MiB", bufferSize)
+                .setInitialMax(bytes/bufferSize)
+                .showSpeed()
+                .setStyle(ProgressBarStyle.UNICODE_BLOCK)
+                .continuousUpdate();
             try(BufferedInputStream inputStream = new BufferedInputStream(new URL(Utils.generateUrl(String.format("api/fetchJar/%s/%s%s", category, type, ((version == null || version.equals("latest")) ? "" : "/" + version)))).openStream());
             FileOutputStream outputStream = new FileOutputStream(out);
             ProgressBar progressBar = progressBarBuilder.build()) {
