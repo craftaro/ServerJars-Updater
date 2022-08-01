@@ -88,9 +88,11 @@ public class UpdateChecker {
             if (version.charAt(0) == 'v') {
                 version = version.substring(1);
             }
+            
+            String current = APP_VERSION.charAt(0) == 'v' ? APP_VERSION.substring(1) : APP_VERSION;
 
             try {
-                return Version.parse(version).compareTo(Version.parse(APP_VERSION)) > 0;
+                return Version.parse(version).compareTo(Version.parse(current)) > 0;
             } catch (IllegalArgumentException ignore) {
                 // One of the versions is not a valid SemVer
             }
