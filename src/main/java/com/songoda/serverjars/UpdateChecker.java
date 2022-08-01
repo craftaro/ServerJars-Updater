@@ -19,8 +19,6 @@ public class UpdateChecker {
     private static final String API_URL = "https://api.github.com/repos/" + GITHUB_PROJECT + "/releases/latest";
     private static final String DOWNLOAD_URL = "https://github.com/" + GITHUB_PROJECT;
 
-    private static final String APP_VERSION = "@version@";
-
     public UpdateChecker(ConfigHandler cfg) {
         if (cfg.isUpdateAvailable() &&
                 // Recheck after some time just to be on the safe side
@@ -68,7 +66,7 @@ public class UpdateChecker {
         con.setRequestProperty("Accept", "application/vnd.github.v3+json");
         con.setRequestProperty("Content-Type", "application/json");
 
-        con.setRequestProperty("User-Agent", "ServerJars-Updater/" + APP_VERSION + " (" +
+        con.setRequestProperty("User-Agent", "ServerJars-Updater/@version@(" +
                 System.getProperty("os.name") + "; " +
                 System.getProperty("os.arch") + ") (+https://github.com/ServerJars/updater#readme)");
 
@@ -88,11 +86,9 @@ public class UpdateChecker {
             if (version.charAt(0) == 'v') {
                 version = version.substring(1);
             }
-            
-            String current = APP_VERSION.charAt(0) == 'v' ? APP_VERSION.substring(1) : APP_VERSION;
 
             try {
-                return Version.parse(version).compareTo(Version.parse(current)) > 0;
+                return Version.parse(version).compareTo(Version.parse("@version@".startsWith("v") ? "@version@".substring(1) : "@version@")) > 0;
             } catch (IllegalArgumentException ignore) {
                 // One of the versions is not a valid SemVer
             }

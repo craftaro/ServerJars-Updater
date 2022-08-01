@@ -116,7 +116,9 @@ public class Utils {
             }
 
             // 1048576 = 1 mib
-            int bytes = jarDetails.getAsJsonObject("response").getAsJsonObject("size").get("bytes").getAsInt();
+            int bytes = jarDetails.getAsJsonObject("size")
+                .get("bytes")
+                .getAsInt();
             int bufferSize = 1024;
             ProgressBarBuilder progressBarBuilder = new ProgressBarBuilder()
                 .setTaskName(String.format("%s %s (%s)", downloading ? "Downloading" : "Updating", type, version))
