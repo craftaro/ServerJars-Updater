@@ -13,11 +13,11 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
         # Set up the JDK
-      - name: Set up JDK 16
+      - name: Set up JDK 8
         uses: actions/setup-java@v3
         with:
           distribution: adopt
-          java-version: 16
+          java-version: 8
       # Make gradle executable
       - name: Make gradle executable
         run: chmod +x gradlew
@@ -25,7 +25,7 @@ jobs:
       - uses: burrunan/gradle-cache-action@v1
         name: Clean, Test and Build Jar
         with:
-          job-id: jdk16
+          job-id: jdk8
           arguments: clean test shadowJar
           gradle-version: wrapper
       # Now we store the artifact in the action
