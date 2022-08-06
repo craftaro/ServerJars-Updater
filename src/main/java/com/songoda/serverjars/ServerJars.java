@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Predicate;
@@ -36,11 +37,11 @@ public final class ServerJars {
 
     public static void main(final String[] args) throws IOException, NoSuchAlgorithmException, InterruptedException {
         System.out.println("   _____                               __               \n" +
-                "  / ___/___  ______   _____  _____    / /___ ___________\n" +
-                "  \\__ \\/ _ \\/ ___/ | / / _ \\/ ___/_  / / __ `/ ___/ ___/\n" +
-                " ___/ /  __/ /   | |/ /  __/ /  / /_/ / /_/ / /  (__  ) \n" +
-                "/____/\\___/_/    |___/\\___/_/   \\____/\\__,_/_/  /____/  \n" +
-                "ServerJars.com           Made with love by Songoda <3\n");
+                           "  / ___/___  ______   _____  _____    / /___ ___________\n" +
+                           "  \\__ \\/ _ \\/ ___/ | / / _ \\/ ___/_  / / __ `/ ___/ ___/\n" +
+                           " ___/ /  __/ /   | |/ /  __/ /  / /_/ / /_/ / /  (__  ) \n" +
+                           "/____/\\___/_/    |___/\\___/_/   \\____/\\__,_/_/  /____/  \n" +
+                           "ServerJars.com           Made with love by Songoda <3\n");
         Utils.debug("Loading CommandLineHandler...");
         isFirstStart = !CFG_FILE.exists();
         config.init();
@@ -104,14 +105,14 @@ public final class ServerJars {
             cmd.add(jar.getAbsolutePath()); // Pass the server location
         }
 
-        cmd.addAll(minecraftArguments.stream().map(it -> "-" + it).collect(Collectors.toList())); // Pass the minecraft arguments that we got with '--mc.*' or '--mcdd.*'
+        cmd.addAll(minecraftArguments.stream().map(it -> ConfigHandler.cliCompatiblityMode() ? it : ("-" + it)).collect(Collectors.toList())); // Pass the minecraft arguments that we got with '--mc.*' or '--mcdd.*'
 
         Utils.debug("Running command: " + String.join(" ", cmd));
 
         try {
             Process process = new ProcessBuilder(cmd)
-                    .inheritIO()
-                    .start();
+            .inheritIO()
+            .start();
 
             Runtime.getRuntime().addShutdownHook(new Thread(process::destroy));
 
@@ -289,10 +290,24 @@ public final class ServerJars {
             System.out.println("\n"+(updateFound ? "The system detected forge as server type" : "The forge runner could not be found.")+". We are now going to run the forge installer to update the libraries...");
             String[] cmd = new String[]{getJavaExecutable(), "-jar", jar.getAbsolutePath(), "--installServer"};
             Utils.debug("Running forge installer: " + String.join(" ", cmd));
-            new ProcessBuilder(cmd)
-                .directory(WORKING_DIRECTORY)
-                .start()
-                .waitFor(); // We wait for the installer to finish to then run the server.
+            ProcessBuilder processBuilder = new ProcessBuilder(cmd)
+            .directory(WORKING_DIRECTORY);
+            if(config.isDebug()){
+                processBuilder.inheritIO();
+            }
+            Process forgeInstallprocess = processBuilder.start();
+            while (forgeInstallprocess.isAlive()) {
+                try {
+                    int exitCode = forgeInstallprocess.waitFor();
+
+                    if (exitCode != 0) {
+                        System.err.println("Forge installer unexpectedly exited with code " + exitCode);
+                        System.exit(1);
+                    }
+
+                    break;
+                } catch (InterruptedException ignore) { }
+            }
         }
 
         String launching = "\nLaunching " + jarDetails.get("file").getAsString() + "...";

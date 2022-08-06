@@ -123,4 +123,11 @@ public class ConfigHandler {
     public boolean isUpdateAvailable() {
         return Boolean.parseBoolean(properties.getProperty("updateCheck.available"));
     }
+
+    // If enabled all the arguments will be passed to the command instead of single arguments
+    public static boolean cliCompatiblityMode(){
+        String data = System.getenv("SJ_COMPATIBILITY");
+        if(data == null) data = "0";
+        return Utils.bool(data);
+    }
 }

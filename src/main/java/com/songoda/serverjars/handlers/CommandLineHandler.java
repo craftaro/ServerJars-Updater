@@ -1,5 +1,6 @@
 package com.songoda.serverjars.handlers;
 
+import com.songoda.serverjars.ServerJars;
 import com.songoda.serverjars.objects.Option;
 import com.songoda.serverjars.objects.options.Help;
 import com.songoda.serverjars.objects.options.MinecraftArgument;
@@ -31,19 +32,23 @@ public class CommandLineHandler {
                 String arg = raw.substring(2);
                 // Find the option
                 Option option = Arrays.stream(options).filter(it -> arg.matches(Utils.regexFromGlob(it.getName()))).findFirst().orElse(null);
-                if (option == null) {
+                if (option != null) {
+                    // Check if it's a single option
+                    if (!option.isSingle() && optionsFound == 1) {
+                        // Run the option
+                        option.run(arg);
+                    }
+
+                    continue; // Prevent further execution
+                } else if(!ConfigHandler.cliCompatiblityMode()){
                     System.out.println("Unknown option: --" + arg);
                     System.exit(1);
                     break;
                 }
+            }
 
-                // Check if it's a single option
-                if (option.isSingle() && optionsFound != 1) {
-                    continue;
-                }
-
-                // Run the option
-                option.run(arg);
+            if(ConfigHandler.cliCompatiblityMode()) {
+                ServerJars.minecraftArguments.add(raw);
             }
         }
     }
