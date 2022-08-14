@@ -44,8 +44,8 @@ public final class ServerJars {
                            "ServerJars.com           Made with love by Songoda <3\n");
         Utils.debug("Loading CommandLineHandler...");
         isFirstStart = !CFG_FILE.exists();
-        config.init();
         new CommandLineHandler(args);
+        config.init();
         Utils.debug("Initializing configuration...");
         config.load();
 

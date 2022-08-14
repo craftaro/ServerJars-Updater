@@ -33,8 +33,7 @@ public class CommandLineHandler {
                 // Find the option
                 Option option = Arrays.stream(options).filter(it -> arg.matches(Utils.regexFromGlob(it.getName()))).findFirst().orElse(null);
                 if (option != null) {
-                    // Check if it's a single option
-                    if (!option.isSingle() && optionsFound == 1) {
+                    if ((!option.isSingle() && optionsFound >= 1) || (option.isSingle() && optionsFound == 1)) {
                         // Run the option
                         option.run(arg);
                     }

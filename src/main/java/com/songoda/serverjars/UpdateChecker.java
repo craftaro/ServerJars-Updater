@@ -15,9 +15,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 public class UpdateChecker {
-    private static final String GITHUB_PROJECT = "ServerJars/updater";
-    private static final String API_URL = "https://api.github.com/repos/" + GITHUB_PROJECT + "/releases/latest";
-    private static final String DOWNLOAD_URL = "https://github.com/" + GITHUB_PROJECT;
+    private static final String API_URL = "https://api.github.com/repos/ServerJars/Updater/releases/latest";
+    private static final String DOWNLOAD_URL = "https://github.com/ServerJars/Updater/releases/latest";
 
     public UpdateChecker(ConfigHandler cfg) {
         if (cfg.isUpdateAvailable() &&
@@ -68,7 +67,7 @@ public class UpdateChecker {
 
         con.setRequestProperty("User-Agent", "ServerJars-Updater/@version@(" +
                 System.getProperty("os.name") + "; " +
-                System.getProperty("os.arch") + ") (+https://github.com/ServerJars/updater#readme)");
+                System.getProperty("os.arch") + ") (+https://github.com/ServerJars/Updater#readme)");
 
         con.setInstanceFollowRedirects(true);
 
@@ -87,8 +86,10 @@ public class UpdateChecker {
                 version = version.substring(1);
             }
 
+            String current = "@version@";
+
             try {
-                return Version.parse(version).compareTo(Version.parse("@version@".startsWith("v") ? "@version@".substring(1) : "@version@")) > 0;
+                return Version.parse(version).compareTo(Version.parse(current.startsWith("v") ? current.substring(1) : current)) > 0;
             } catch (IllegalArgumentException ignore) {
                 // One of the versions is not a valid SemVer
             }
